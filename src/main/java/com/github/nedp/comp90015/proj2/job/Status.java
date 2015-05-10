@@ -1,9 +1,8 @@
-package java.com.github.nedp.comp90015.proj2.job;
+package com.github.nedp.comp90015.proj2.job;
 
 /**
  * Enum Status
- * <p/>
- * A finite state machine for tracking Job status.
+ * is a finite state machine for tracking {@link Job} status.
  * <p/>
  * Legal transitions:
  * <ul>
@@ -11,7 +10,7 @@ package java.com.github.nedp.comp90015.proj2.job;
  *     <li>WAITING --(not ok)--> FAILED</li>
  *     <li>RUNNING --(ok)--> FINISHED</li>
  *     <li>RUNNING --(not ok)--> FAILED</li>
-* </ul>
+ * </ul>
  *
  * @author nedp
  */
@@ -24,7 +23,8 @@ public enum Status {
     // DISCONNECTED is not the responsibility of this package.
 
     /**
-     * Looks up the next state for the specified transition.
+     * Status
+     * looks up the next state for the specified transition.
      *
      * @param ok  false iff there has been a failure.
      * @throws IllegalStateException  if the transition specified
@@ -55,8 +55,6 @@ public enum Status {
             }
         }
 
-        throw new IllegalStateException(
-                String.format("this: %s, ok: %b", this.name(), ok)
-        );
+        throw new IllegalStateException(String.format("this: %s, ok: %b", this.name(), ok));
     }
 }
