@@ -1,5 +1,7 @@
 package java.com.github.nedp.comp90015.proj2.job;
 
+import java.nio.file.Path;
+
 /**
  * Class Job
  * <p/>
@@ -8,33 +10,31 @@ package java.com.github.nedp.comp90015.proj2.job;
  * @author nedp
  */
 public class Job implements Runnable {
-    private final String jarFilename;
-    private final String inFilename;
-    private final String outFilename;
+    private final Path jarPath;
+    private final Path inPath;
+    private final Path outPath;
 
     private Status status;
 
-    Job(String jarFilename, String inFilename, String outFilename) {
-        this.jarFilename = jarFilename;
-        this.inFilename = inFilename;
-        this.outFilename = outFilename;
+    Job(Path jarPath, Path inPath, Path outPath) {
+        this.jarPath = jarPath;
+        this.inPath = inPath;
+        this.outPath = outPath;
 
         this.status = Status.WAITING;
     }
 
     @Override
     public void run() {
-        // Verify that the required files exist.
-        final boolean filesExist = true; // TODO
-
-        // Advance the state.
-        this.status = this.status.nextState(!filesExist);
+        // Advance the state, everything is ok.
+        this.status = this.status.nextState(true);
 
         // Run the JVM with the jar and input file.
         // Pipe stderr and stdout to a log file.
-        final boolean didFail = false; // TODO
+        final boolean ok = false; // TODO
 
-        // Advance the state.
-        this.status = this.status.nextState(didFail);
+        // Advance the state based on whether there
+        // has been a failure.
+        this.status = this.status.nextState(ok);
     }
 }

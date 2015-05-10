@@ -7,10 +7,10 @@ package java.com.github.nedp.comp90015.proj2.job;
  * <p/>
  * Legal transitions:
  * <ul>
- *     <li>WAITING --(okay)--> RUNNING</li>
- *     <li>WAITING --(failure)--> FAILED</li>
- *     <li>RUNNING --(okay)--> FINISHED</li>
- *     <li>RUNNING --(failure)--> FAILED</li>
+ *     <li>WAITING --(ok)--> RUNNING</li>
+ *     <li>WAITING --(not ok)--> FAILED</li>
+ *     <li>RUNNING --(ok)--> FINISHED</li>
+ *     <li>RUNNING --(not ok)--> FAILED</li>
 * </ul>
  *
  * @author nedp
@@ -26,22 +26,15 @@ public enum Status {
     /**
      * Looks up the next state for the specified transition.
      *
-     * @param didFail  whether or not there has been a failure
-     *                 since reaching this status.
+     * @param ok  false iff there has been a failure.
      * @throws IllegalStateException  if the transition specified
-     *                                by @code{didFail} cannot occur.
+     *                                by @code{ok} cannot occur.
      * @return the next state.
      */
-    final Status nextState(boolean didFail) {
-        if (didFail) {
-            switch (this) {
-                case WAITING:
-                case RUNNING:
-                    return FAILED;
-                default:
-                    // illegal
-            }
-        } else {
+    final Status nextState(boolean ok) {
+        if (ok) {
+            // WAITING --(ok)--> RUNNING
+            // RUNNING --(ok)--> FINISHED
             switch (this) {
                 case WAITING:
                     return RUNNING;
@@ -50,10 +43,20 @@ public enum Status {
                 default:
                     // illegal
             }
+        } else {
+            // WAITING --(not ok)--> FAILED
+            // RUNNING --(not ok)--> FAILED
+            switch (this) {
+                case WAITING:
+                case RUNNING:
+                    return FAILED;
+                default:
+                    // illegal
+            }
         }
 
         throw new IllegalStateException(
-                String.format("this: %s, didFail: %b", this.name(), didFail)
+                String.format("this: %s, ok: %b", this.name(), ok)
         );
     }
 }
