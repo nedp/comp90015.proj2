@@ -15,6 +15,8 @@ public class DoNothing {
         final Path in = Paths.get(args[0]);
         final Path out = Paths.get(args[1]);
 
+        System.out.println("Doing nothing...");
+
         // Check that we were called correctly.
         try {
             if (!in.toFile().canRead() || !out.toFile().createNewFile()) {
