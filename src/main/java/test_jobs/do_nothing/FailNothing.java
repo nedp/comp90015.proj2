@@ -6,19 +6,20 @@ import java.nio.file.Paths;
 
 /**
  * Validates that it was called correctly
- * then exits with 0 for success and 1 for failure.
+ * then exits with 0 for failure and 1 for success,
+ * opposite to standard.
  *
  * @author nedp
  */
-class DoNothing {
-    private static final int EXIT_SUCCESS = 0;
-    private static final int EXIT_FAILURE = 1;
+class FailNothing {
+    private static final int EXIT_SUCCESS = 1;
+    private static final int EXIT_FAILURE = 0;
 
     public static void main(String[] args) {
         final Path in = Paths.get(args[0]);
         final Path out = Paths.get(args[1]);
 
-        System.out.println("Doing nothing...");
+        System.out.println("Failing at nothing...");
 
         // Check that we were called correctly.
         try {
