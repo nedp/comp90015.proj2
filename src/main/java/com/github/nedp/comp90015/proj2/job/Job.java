@@ -20,12 +20,15 @@ public class Job implements Runnable {
     // TODO add memory limit
     // TODO add timeout
 
+    private static final String JAVA = "java";
+    private static final String JAR_FLAG = "-jar";
+
     private final File logFile;
     private final File outFile;
     private final File inFile;
     private final File jarFile;
 
-    private final StatusTracker status;
+    private final StatusTracker tracker;
 
     /**
      * Creates a new Job which may executed as:
@@ -35,14 +38,14 @@ public class Job implements Runnable {
      * @param inFile  not null
      * @param outFile  not null
      * @param logFile  not null, not empty
-     * @param status  not null, should be ready to start
+     * @param tracker  not null, should be ready to start
      */
-    Job(@NotNull File jarFile, @NotNull File inFile, @NotNull File outFile, @NotNull File logFile, @NotNull StatusTracker status) {
+    Job(@NotNull File jarFile, @NotNull File inFile, @NotNull File outFile, @NotNull File logFile, @NotNull StatusTracker tracker) {
         this.jarFile = jarFile;
         this.inFile = inFile;
         this.outFile = outFile;
         this.logFile = logFile;
-        this.status = status;
+        this.tracker = tracker;
     }
 
     @Override
@@ -50,23 +53,30 @@ public class Job implements Runnable {
         final boolean FAILURE = false;
 
         // Enforce run-once semantics by checking and advancing state.
-        this.status.start();
+        this.tracker.start();
 
         // Run the JVM with the jar and input file.
         // Pipe stderr and stdout to a log file.
         final boolean ok;
         try {
-            final String cmd = String.format("java -jar %s %s %s >%s 2>&1",
-                this.jarFile, this.inFile, this.outFile, this.logFile);
-            final Process p = Runtime.getRuntime().exec(cmd);
+            ProcessBuilder pb = new ProcessBuilder(JAVA, JAR_FLAG, jarFile.toString(),
+                inFile.toString(), outFile.toString());
+            pb.redirectOutput(logFile);
+            pb.redirectError(pb.redirectOutput());
+
+            final Process p = pb.start();
             ok = p.waitFor() == 0;
+
         } catch (IOException | InterruptedException e) {
-            this.status.finish(FAILURE);
+            // TODO log this nicely
+            e.printStackTrace();
+
+            this.tracker.finish(FAILURE);
             return;
         }
 
         // Advance the state based on whether everything is ok.
-        this.status.finish(ok);
+        this.tracker.finish(ok);
     }
 
     /**
@@ -75,6 +85,6 @@ public class Job implements Runnable {
      * @return the status
      */
     final public Status currentStatus() {
-        return this.status.current();
+        return this.tracker.current();
     }
 }
