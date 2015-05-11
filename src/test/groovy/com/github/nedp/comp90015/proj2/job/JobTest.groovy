@@ -14,17 +14,19 @@ import static Status.*
  */
 class JobTest extends Specification {
     static def PATH = "src/test/resources/do_nothing"
-    static def JAR = new File("${PATH}.jar")
-    static def IN = new File("${PATH}.in")
-    static def OUT = new File("${PATH}.out")
-    static def LOG = new File("${PATH}.log")
+    static def FILES = new Job.Files(PATH);
+    static def JAR = FILES.jar
+    static def IN = FILES.in
+    static def OUT = FILES.out
+    static def LOG = FILES.log
     static def NONE = new File("")
 
     static def BAD_PATH = "src/test/resources/fail_nothing"
-    static def BAD_JAR = new File("${BAD_PATH}.jar")
-    static def BAD_IN = new File("${BAD_PATH}.in")
-    static def BAD_OUT = new File("${BAD_PATH}.out")
-    static def BAD_LOG = new File("${BAD_PATH}.log")
+    static def BAD_FILES = new Job.Files(BAD_PATH);
+    static def BAD_JAR = BAD_FILES.jar
+    static def BAD_IN = BAD_FILES.in
+    static def BAD_OUT = BAD_FILES.out
+    static def BAD_LOG = BAD_FILES.log
 
     def setupSpec() {
         try { OUT.delete() } catch (_) {}
@@ -42,11 +44,10 @@ class JobTest extends Specification {
 
     def "delegates #currentStatus to tracker#current"() {
         given:
-
         StatusTracker tracker = Mock()
         1 * tracker.current() >> want
         0 * _
-        def job = new Job(JAR, IN, OUT, LOG, tracker)
+        def job = new Job(FILES, tracker)
 
         expect: job.currentStatus() == want
 
@@ -57,7 +58,7 @@ class JobTest extends Specification {
     def "runs using the output files, and finishes"() {
         given:
         StatusTracker tracker = Mock()
-        def job = new Job(JAR, IN, OUT, LOG, tracker)
+        def job = new Job(FILES, tracker)
 
         when: job.run()
         then:
@@ -71,7 +72,7 @@ class JobTest extends Specification {
     def "detects failure to invoke"() {
         given:
         StatusTracker tracker = Mock()
-        def job = new Job(jar, in_, out, log, tracker)
+        def job = new Job(new Job.Files(jar, in_, out, log), tracker)
 
         when: job.run()
         then:
@@ -90,7 +91,7 @@ class JobTest extends Specification {
     def "detects non-zero exit code failure"() {
         given:
         StatusTracker tracker = Mock()
-        def job = new Job(BAD_JAR, BAD_IN, BAD_OUT, BAD_LOG, tracker)
+        def job = new Job(BAD_FILES, tracker)
 
         when: job.run()
         then:
@@ -102,7 +103,7 @@ class JobTest extends Specification {
     def "routes both stderr and stdout to _.log"() {
         given:
         StatusTracker tracker = Mock()
-        def job = new Job(JAR, IN, OUT, LOG, tracker)
+        def job = new Job(FILES, tracker)
 
         when:
         job.run()
@@ -116,5 +117,20 @@ class JobTest extends Specification {
         lines[0] == DoNothing.STDOUT
         lines[1] == DoNothing.STDERR
         lines.size() == 2
+    }
+
+    def "Files is correct"() {
+        given:
+        def jar = new File("1");
+        def in_ = new File("2");
+        def out = new File("3");
+        def log = new File("4");
+        def files = new Job.Files(jar, in_, out, log)
+
+        expect:
+        jar == files.jar
+        in_ == files.in
+        out == files.out
+        log == files.log
     }
 }

@@ -19,8 +19,6 @@ import java.io.IOException;
 @SuppressWarnings("unused") // TODO Dependents aren't implemented yet.
 public class Job implements Runnable {
 
-    // TODO add memory limit
-    // TODO add timeout
 
     private static final String JAVA = "java";
     private static final String JAR_FLAG = "-jar";
@@ -30,34 +28,13 @@ public class Job implements Runnable {
     @NotNull
     private final Files files;
 
-    private final int memoryLimit; // in MB
-    private final int timeout; // in seconds
+    // TODO add memory limit
+    // private final int memoryLimit; // in MB
+    // TODO add timeout
+    // private final int timeout; // in seconds
 
     private final StatusTracker tracker;
 
-    /**
-     * Creates a new Job which may executed as:
-     * {@code java -jar jarFile inFile outFile >logFile 2>&1}.
-     *
-     * @param files  not null
-     * @param tracker  not null, should be ready to {@link StatusTracker#start}
-     * @param memoryLimit  maximum number of megabytes of RAM to allocate to the job,
-     *                     no limit if non-positive
-     * @param timeout  maximum number of seconds to wait for the job to finish,
-     *                 no limit if non-positive
-     */
-    public Job(@NotNull Files files, @NotNull StatusTracker tracker, int memoryLimit, int timeout) {
-        if (memoryLimit < 1) {
-            memoryLimit = NO_LIMIT;
-        }
-        if (timeout < 1) {
-            timeout = NO_TIMEOUT;
-        }
-        this.files = files;
-        this.tracker = tracker;
-        this.memoryLimit = memoryLimit;
-        this.timeout = timeout;
-    }
 
     /**
      * Creates a new Job with no memory limit or timeout.
@@ -71,12 +48,14 @@ public class Job implements Runnable {
     public Job(@NotNull Files files, @NotNull StatusTracker tracker) {
         this.files = files;
         this.tracker = tracker;
-        this.memoryLimit = NO_LIMIT;
-        this.timeout = NO_TIMEOUT;
+        // TODO
+        // this.memoryLimit = NO_LIMIT;
+        // this.timeout = NO_TIMEOUT;
     }
 
     @Override
     final public void run() {
+        // TODO add
         final boolean FAILURE = false;
 
         // Enforce run-once semantics by checking and advancing state.
@@ -177,5 +156,40 @@ public class Job implements Runnable {
             this.out = new File(String.format("%s.out", basename));
             this.log = new File(String.format("%s.log", basename));
         }
+
+        /**
+         * Creates a record with the specified files.
+         */
+        public Files(@NotNull File jar, @NotNull File in, @NotNull File out, @NotNull File log) {
+            this.jar = jar;
+            this.in = in;
+            this.out = out;
+            this.log = log;
+        }
     }
+
+    // TODO uncomment when timeouts and memory limits are implemented
+    // /**
+    //  * Creates a new Job which may executed as:
+    //  * {@code java -jar jarFile inFile outFile >logFile 2>&1}.
+    //  *
+    //  * @param files  not null
+    //  * @param tracker  not null, should be ready to {@link StatusTracker#start}
+    //  * @param memoryLimit  maximum number of megabytes of RAM to allocate to the job,
+    //  *                     no limit if non-positive
+    //  * @param timeout  maximum number of seconds to wait for the job to finish,
+    //  *                 no limit if non-positive
+    //  */
+    // public Job(@NotNull Files files, @NotNull StatusTracker tracker, int memoryLimit, int timeout) {
+    //     if (memoryLimit < 1) {
+    //         memoryLimit = NO_LIMIT;
+    //     }
+    //     if (timeout < 1) {
+    //         timeout = NO_TIMEOUT;
+    //     }
+    //     this.files = files;
+    //     this.tracker = tracker;
+    //     this.memoryLimit = memoryLimit;
+    //     this.timeout = timeout;
+    // }
 }
