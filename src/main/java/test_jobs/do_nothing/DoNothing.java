@@ -1,14 +1,16 @@
 package test_jobs.do_nothing;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Created by nedp on 10/05/15.
+ * Validates that it was called correctly
+ * then exits with 0 for success and 1 for failure.
+ *
+ * @author nedp
  */
-public class DoNothing {
+class DoNothing {
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_FAILURE = 1;
 

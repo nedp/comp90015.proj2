@@ -5,12 +5,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Exits with 0 for failure and 1 for success,
+ * Validates that it was called correctly
+ * then exits with 0 for failure and 1 for success,
  * opposite to standard.
  *
- * Created by nedp on 10/05/15.
+ * @author nedp
  */
-public class FailNothing {
+class FailNothing {
     private static final int EXIT_SUCCESS = 1;
     private static final int EXIT_FAILURE = 0;
 

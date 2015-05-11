@@ -39,6 +39,7 @@ class JobTest extends Specification {
 
     def "delegates #currentStatus to tracker#current"() {
         given:
+
         StatusTracker tracker = Mock()
         1 * tracker.current() >> want
         0 * _

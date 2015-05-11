@@ -40,7 +40,9 @@ public class Job implements Runnable {
      * @param logFile  not null, not empty
      * @param tracker  not null, should be ready to start
      */
-    Job(@NotNull File jarFile, @NotNull File inFile, @NotNull File outFile, @NotNull File logFile, @NotNull StatusTracker tracker) {
+    Job(@NotNull File jarFile, @NotNull File inFile, @NotNull File outFile,
+        @NotNull File logFile, @NotNull StatusTracker tracker)
+    {
         this.jarFile = jarFile;
         this.inFile = inFile;
         this.outFile = outFile;
@@ -69,7 +71,7 @@ public class Job implements Runnable {
 
         } catch (IOException | InterruptedException e) {
             // TODO log this nicely
-            e.printStackTrace();
+            System.out.printf("Job#run:  %s caught:  %s\n", e.getClass(), e.getMessage());
 
             this.tracker.finish(FAILURE);
             return;
