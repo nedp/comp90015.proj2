@@ -16,21 +16,22 @@ import java.io.IOException;
  *
  * @author nedp
  */
+@SuppressWarnings("unused") // TODO Dependents aren't implemented yet.
 public class Job implements Runnable {
+
     // TODO add memory limit
     // TODO add timeout
 
     private static final String JAVA = "java";
     private static final String JAR_FLAG = "-jar";
+    private static final int NO_LIMIT = -1;
+    private static final int NO_TIMEOUT = -1;
 
     @NotNull
-    private final File jarFile;
-    @NotNull
-    private final File inFile;
-    @NotNull
-    private final File outFile;
-    @NotNull
-    private final File logFile;
+    private final Files files;
+
+    private final int memoryLimit; // in MB
+    private final int timeout; // in seconds
 
     private final StatusTracker tracker;
 
@@ -38,20 +39,40 @@ public class Job implements Runnable {
      * Creates a new Job which may executed as:
      * {@code java -jar jarFile inFile outFile >logFile 2>&1}.
      *
-     * @param jarFile  not null, should exist
-     * @param inFile  not null, should exist
-     * @param outFile  not null, parent should exist
-     * @param logFile  not null, parent should exist
+     * @param files  not null
+     * @param tracker  not null, should be ready to {@link StatusTracker#start}
+     * @param memoryLimit  maximum number of megabytes of RAM to allocate to the job,
+     *                     no limit if non-positive
+     * @param timeout  maximum number of seconds to wait for the job to finish,
+     *                 no limit if non-positive
+     */
+    public Job(@NotNull Files files, @NotNull StatusTracker tracker, int memoryLimit, int timeout) {
+        if (memoryLimit < 1) {
+            memoryLimit = NO_LIMIT;
+        }
+        if (timeout < 1) {
+            timeout = NO_TIMEOUT;
+        }
+        this.files = files;
+        this.tracker = tracker;
+        this.memoryLimit = memoryLimit;
+        this.timeout = timeout;
+    }
+
+    /**
+     * Creates a new Job with no memory limit or timeout.
+     * <p/>
+     * The Job may be executed as
+     * {@code java -jar jarFile inFile outFile >logFile 2>&1}.
+     *
+     * @param files  not null
      * @param tracker  not null, should be ready to {@link StatusTracker#start}
      */
-    Job(@NotNull File jarFile, @NotNull File inFile, @NotNull File outFile,
-        @NotNull File logFile, @NotNull StatusTracker tracker)
-    {
-        this.jarFile = jarFile;
-        this.inFile = inFile;
-        this.outFile = outFile;
-        this.logFile = logFile;
+    public Job(@NotNull Files files, @NotNull StatusTracker tracker) {
+        this.files = files;
         this.tracker = tracker;
+        this.memoryLimit = NO_LIMIT;
+        this.timeout = NO_TIMEOUT;
     }
 
     @Override
@@ -65,10 +86,10 @@ public class Job implements Runnable {
         // Pipe stderr and stdout to a log file.
         final boolean ok;
         try {
-            ProcessBuilder pb = new ProcessBuilder(JAVA, JAR_FLAG, this.jarFile.toString(),
-                this.inFile.toString(), this.outFile.toString());
+            ProcessBuilder pb = new ProcessBuilder(JAVA, JAR_FLAG, this.files.jar.toString(),
+                this.files.in.toString(), this.files.out.toString());
             pb.redirectErrorStream(true);
-            pb.redirectOutput(this.logFile);
+            pb.redirectOutput(this.files.log);
 
             final Process p = pb.start();
             ok = p.waitFor() == 0;
@@ -101,7 +122,7 @@ public class Job implements Runnable {
      */
     @NotNull
     final public File jarFile() {
-        return this.jarFile;
+        return this.files.jar;
     }
 
     /**
@@ -110,7 +131,7 @@ public class Job implements Runnable {
      */
     @NotNull
     final public File inFile() {
-        return this.inFile;
+        return this.files.in;
     }
 
     /**
@@ -119,7 +140,7 @@ public class Job implements Runnable {
      */
     @NotNull
     final public File outFile() {
-        return this.outFile;
+        return this.files.out;
     }
 
     /**
@@ -128,6 +149,33 @@ public class Job implements Runnable {
      */
     @NotNull
     final public File logFile() {
-        return this.logFile;
+        return this.files.log;
+    }
+
+    /**
+     * A record to store the files associated with a {@link Job}.
+     */
+    @SuppressWarnings("unused")
+    public static final class Files {
+        @NotNull public final File jar;
+        @NotNull public final File in;
+        @NotNull public final File out;
+        @NotNull public final File log;
+
+        /**
+         * Creates a record by appending suffixes to the base name.
+         * <p/>
+         * eg: {@code new Files("name")} returns
+         * {@code Files{"name.jar", "name.in", "name.out", "name.log"}}
+         *
+         * @param basename  not null, not empty
+         *                  "$basename$.jar" and "$basename$.in should exist"
+         */
+        public Files(@NotNull String basename) {
+            this.jar = new File(String.format("%s.jar", basename));
+            this.in = new File(String.format("%s.in", basename));
+            this.out = new File(String.format("%s.out", basename));
+            this.log = new File(String.format("%s.log", basename));
+        }
     }
 }
