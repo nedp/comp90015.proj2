@@ -12,6 +12,9 @@ import java.nio.file.Paths;
  * @author nedp
  */
 class FailNothing {
+    private static final String STDOUT = "stdout: Failing at nothing...";
+    private static final String STDERR = "stderr: Done";
+
     private static final int EXIT_SUCCESS = 1;
     private static final int EXIT_FAILURE = 0;
 
@@ -19,19 +22,22 @@ class FailNothing {
         final Path in = Paths.get(args[0]);
         final Path out = Paths.get(args[1]);
 
-        System.out.println("Failing at nothing...");
+        System.out.println(STDOUT);
 
         // Check that we were called correctly.
         try {
             if (!in.toFile().canRead() || !out.toFile().createNewFile()) {
+                System.err.println(STDERR);
                 System.exit(EXIT_FAILURE);
             }
         } catch (IOException e) {
+            System.err.println(STDERR);
             System.exit(EXIT_FAILURE);
         }
 
         // Do nothing
-        
+
+        System.err.println(STDERR);
         System.exit(EXIT_SUCCESS);
     }
 }

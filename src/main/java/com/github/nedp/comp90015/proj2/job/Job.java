@@ -61,10 +61,10 @@ public class Job implements Runnable {
         // Pipe stderr and stdout to a log file.
         final boolean ok;
         try {
-            ProcessBuilder pb = new ProcessBuilder(JAVA, JAR_FLAG, jarFile.toString(),
-                inFile.toString(), outFile.toString());
-            pb.redirectOutput(logFile);
-            pb.redirectError(pb.redirectOutput());
+            ProcessBuilder pb = new ProcessBuilder(JAVA, JAR_FLAG, this.jarFile.toString(),
+                this.inFile.toString(), this.outFile.toString());
+            pb.redirectErrorStream(true);
+            pb.redirectOutput(this.logFile);
 
             final Process p = pb.start();
             ok = p.waitFor() == 0;

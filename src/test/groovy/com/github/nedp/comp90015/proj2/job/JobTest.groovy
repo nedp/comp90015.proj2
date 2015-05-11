@@ -1,8 +1,11 @@
 package com.github.nedp.comp90015.proj2.job
 
 import java.io.File
+import java.nio.file.Files
 
 import spock.lang.Specification
+
+import test_jobs.do_nothing.DoNothing
 
 import static Status.*
 
@@ -94,5 +97,24 @@ class JobTest extends Specification {
         1 * tracker.start()
         1 * tracker.finish(false)
         0 * _
+    }
+
+    def "routes both stderr and stdout to _.log"() {
+        given:
+        StatusTracker tracker = Mock()
+        def job = new Job(JAR, IN, OUT, LOG, tracker)
+
+        when:
+        job.run()
+        def lines = Files.readAllLines(LOG.toPath())
+
+        then:
+        1 * tracker.start()
+        1 * tracker.finish(true)
+        0 * _
+        and:
+        lines[0] == DoNothing.STDOUT
+        lines[1] == DoNothing.STDERR
+        lines.size() == 2
     }
 }
