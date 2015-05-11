@@ -2,7 +2,7 @@ package com.github.nedp.comp90015.proj2.job;
 
 /**
  * Enum Status
- * is a finite state machine for tracking {@link Job} status.
+ * describes states and transitions for tracking {@link Job} status.
  * <p/>
  * Legal transitions:
  * <ul>
@@ -31,7 +31,7 @@ public enum Status {
      *                                by @code{ok} cannot occur.
      * @return the next state.
      */
-    final Status nextState(boolean ok) {
+    public final Status nextState(boolean ok) {
         if (ok) {
             // WAITING --(ok)--> RUNNING
             // RUNNING --(ok)--> FINISHED
