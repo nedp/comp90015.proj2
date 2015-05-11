@@ -1,5 +1,7 @@
 package com.github.nedp.comp90015.proj2.job;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A threadsafe interface for a finite state machine tracking
  * {@link Job} status.
@@ -14,10 +16,11 @@ package com.github.nedp.comp90015.proj2.job;
  *
  * @author nedp
  */
+@SuppressWarnings("WeakerAccess") // TODO Dependents aren't implemented yet.
 public class StatusTracker {
     private Status status = Status.WAITING;
 
-    StatusTracker() {}
+    public StatusTracker() {}
 
     /**
      * Triggers transition from WAITING to RUNNING.
@@ -44,6 +47,7 @@ public class StatusTracker {
      *
      * @return the status
      */
+    @NotNull
     synchronized Status current() {
         return this.status;
     }

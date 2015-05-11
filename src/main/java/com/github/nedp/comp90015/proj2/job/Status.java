@@ -23,10 +23,9 @@ public enum Status {
     // DISCONNECTED is not the responsibility of this package.
 
     /**
-     * Status
-     * looks up the next state for the specified transition.
+     * Looks up the next state for the specified transition.
      *
-     * @param ok  false iff there has been a failure.
+     * @param ok  false if there has been a failure, otherwise true.
      * @throws IllegalStateException  if the transition specified
      *                                by @code{ok} cannot occur.
      * @return the next state.
