@@ -23,10 +23,14 @@ public class Job implements Runnable {
     private static final String JAVA = "java";
     private static final String JAR_FLAG = "-jar";
 
-    private final File logFile;
-    private final File outFile;
-    private final File inFile;
+    @NotNull
     private final File jarFile;
+    @NotNull
+    private final File inFile;
+    @NotNull
+    private final File outFile;
+    @NotNull
+    private final File logFile;
 
     private final StatusTracker tracker;
 
@@ -34,11 +38,11 @@ public class Job implements Runnable {
      * Creates a new Job which may executed as:
      * {@code java -jar jarFile inFile outFile >logFile 2>&1}.
      *
-     * @param jarFile  not null, not empty
-     * @param inFile  not null
-     * @param outFile  not null
-     * @param logFile  not null, not empty
-     * @param tracker  not null, should be ready to start
+     * @param jarFile  not null, should exist
+     * @param inFile  not null, should exist
+     * @param outFile  not null, parent should exist
+     * @param logFile  not null, parent should exist
+     * @param tracker  not null, should be ready to {@link StatusTracker#start}
      */
     Job(@NotNull File jarFile, @NotNull File inFile, @NotNull File outFile,
         @NotNull File logFile, @NotNull StatusTracker tracker)
@@ -86,7 +90,44 @@ public class Job implements Runnable {
      *
      * @return the status
      */
+    @NotNull
     final public Status currentStatus() {
         return this.tracker.current();
+    }
+
+    /**
+     * Retrieves the file used as the JAR for this Job.
+     * @return the JAR's File object.
+     */
+    @NotNull
+    final public File jarFile() {
+        return this.jarFile;
+    }
+
+    /**
+     * Retrieves the file used as the input file for this Job.
+     * @return the input File object.
+     */
+    @NotNull
+    final public File inFile() {
+        return this.inFile;
+    }
+
+    /**
+     * Retrieves the file used as the output file for this Job.
+     * @return the output File object.
+     */
+    @NotNull
+    final public File outFile() {
+        return this.outFile;
+    }
+
+    /**
+     * Retrieves the file used to collect stdout and stderr for this Job.
+     * @return the log File object.
+     */
+    @NotNull
+    final public File logFile() {
+        return this.logFile;
     }
 }
