@@ -2,9 +2,13 @@
   <library name="org.codehaus.groovy:groovy-all:2.4.1" type="repository">
     <properties maven-id="org.codehaus.groovy:groovy-all:2.4.1" />
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/codehaus/groovy/groovy-all/2.4.1/groovy-all-2.4.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/groovy-all-2.4.1.jar!/" />
     </CLASSES>
-    <JAVADOC />
-    <SOURCES />
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib/groovy-all-2.4.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/groovy-all-2.4.1-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>
