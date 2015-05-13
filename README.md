@@ -1,6 +1,15 @@
 # comp90015.proj2
 Project 2 (a Master/Worker job system) for Distributed Systems at The University of Melbourne.
 
+# First Time Setup
+
+1. Clone the repository `ssh://git@github.com/nedp/comp90015.proj2`.
+2. Change to branch `nedp/job-class` (TODO replace with master when PR goes through)
+3. Install maven from https://maven.apache.org/download.cgi --
+   Follow maven's README instructions.
+4. Run `mvn test` to check that all technologies are working on your machine.
+
+
 ## git
 Workflow:
 

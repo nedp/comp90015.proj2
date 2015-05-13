@@ -1,6 +1,6 @@
 # Skip test job outputs...
-/src/test/resources/*.out
-/src/test/resources/*.log
+/src/test/resources/*/*.out
+/src/test/resources/*/*.log
 
 # Created by https://www.gitignore.io
 
@@ -105,3 +105,4 @@ local.properties
 
 # TeXlipse plugin
 .texlipse
+/target

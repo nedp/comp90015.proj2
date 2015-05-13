@@ -1,11 +1,10 @@
 package com.github.nedp.comp90015.proj2.job
 
-import java.io.File
 import java.nio.file.Files
 
 import spock.lang.Specification
 
-import test_jobs.do_nothing.DoNothing
+import test_jobs.DoNothing
 
 import static Status.*
 
@@ -13,7 +12,7 @@ import static Status.*
  * Created by nedp on 11/05/15.
  */
 class JobTest extends Specification {
-    static def PATH = "src/test/resources/do_nothing"
+    static def PATH = "src/test/resources/test_jobs/do_nothing"
     static def FILES = new Job.Files(PATH);
     static def JAR = FILES.jar
     static def IN = FILES.in
@@ -21,18 +20,24 @@ class JobTest extends Specification {
     static def LOG = FILES.log
     static def NONE = new File("")
 
-    static def BAD_PATH = "src/test/resources/fail_nothing"
+    static def BAD_PATH = "src/test/resources/test_jobs/fail_nothing"
     static def BAD_FILES = new Job.Files(BAD_PATH);
-    static def BAD_JAR = BAD_FILES.jar
-    static def BAD_IN = BAD_FILES.in
     static def BAD_OUT = BAD_FILES.out
     static def BAD_LOG = BAD_FILES.log
+
+    static def WORD_COUNT_JAR =  new File("src/test/resources/SampleJob/wordcount.jar")
+    static def WORD_COUNT_IN =   new File("src/test/resources/SampleJob/sample-input.txt")
+    static def WORD_COUNT_WANT = new File("src/test/resources/SampleJob/sample-output.txt")
+    static def WORD_COUNT_OUT =  new File("src/test/resources/SampleJob/wordcount.out")
+    static def WORD_COUNT_LOG =  new File("src/test/resources/SampleJob/wordcount.log")
 
     def setupSpec() {
         try { OUT.delete() } catch (_) {}
         try { LOG.delete() } catch (_) {}
         try { BAD_OUT.delete() } catch (_) {}
         try { BAD_LOG.delete() } catch (_) {}
+        try { WORD_COUNT_OUT.delete() } catch (_) {}
+        try { WORD_COUNT_LOG.delete() } catch (_) {}
     }
 
     def cleanup() {
@@ -132,5 +137,32 @@ class JobTest extends Specification {
         in_ == files.in
         out == files.out
         log == files.log
+    }
+
+    def "Runs wordcount with expected output"() {
+        given:
+        StatusTracker tracker = Mock()
+        def files = new Job.Files(WORD_COUNT_JAR, WORD_COUNT_IN, WORD_COUNT_OUT, WORD_COUNT_LOG)
+        def job = new Job(files, tracker)
+
+        when: job.run()
+        then:
+        1 * tracker.start()
+        1 * tracker.finish(true)
+        0 * _
+        and:
+        def want = Files.readAllLines(WORD_COUNT_WANT.toPath())
+        def got = Files.readAllLines(WORD_COUNT_OUT.toPath())
+        want.equals(got)
+    }
+
+    // TODO
+    def "Jobs timeout correctly"() {
+
+    }
+
+    // TODO
+    def "Jobs run out of memory correctly"() {
+
     }
 }

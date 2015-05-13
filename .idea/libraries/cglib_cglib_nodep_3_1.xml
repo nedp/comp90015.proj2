@@ -2,9 +2,13 @@
   <library name="cglib:cglib-nodep:3.1" type="repository">
     <properties maven-id="cglib:cglib-nodep:3.1" />
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/cglib/cglib-nodep/3.1/cglib-nodep-3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/cglib-nodep-3.1.jar!/" />
     </CLASSES>
-    <JAVADOC />
-    <SOURCES />
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib/cglib-nodep-3.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/cglib-nodep-3.1-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>
