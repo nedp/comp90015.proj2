@@ -1,5 +1,7 @@
 package com.github.nedp.comp90015.proj2.job
 
+import spock.lang.Ignore
+
 import java.nio.file.Files
 
 import spock.lang.Specification
@@ -12,44 +14,37 @@ import static Status.*
  * Created by nedp on 11/05/15.
  */
 class JobTest extends Specification {
-    static def PATH = "src/test/resources/test_jobs/do_nothing"
-    static def FILES = new Job.Files(PATH);
-    static def JAR = FILES.jar
-    static def IN = FILES.in
-    static def OUT = FILES.out
-    static def LOG = FILES.log
+    static def FILES = new Job.Files("src/test/resources/test_jobs/do_nothing");
+    static def JAR = FILES.jar;
+    static def IN = FILES.in;
+    static def OUT = FILES.out;
+    static def LOG = FILES.log;
     static def NONE = new File("")
 
-    static def BAD_PATH = "src/test/resources/test_jobs/fail_nothing"
-    static def BAD_FILES = new Job.Files(BAD_PATH);
-    static def BAD_OUT = BAD_FILES.out
-    static def BAD_LOG = BAD_FILES.log
+    static def BAD_FILES = new Job.Files("src/test/resources/test_jobs/fail_nothing");
 
     static def WORD_COUNT_JAR =  new File("src/test/resources/SampleJob/wordcount.jar")
     static def WORD_COUNT_IN =   new File("src/test/resources/SampleJob/sample-input.txt")
-    static def WORD_COUNT_WANT = new File("src/test/resources/SampleJob/sample-output.txt")
     static def WORD_COUNT_OUT =  new File("src/test/resources/SampleJob/wordcount.out")
     static def WORD_COUNT_LOG =  new File("src/test/resources/SampleJob/wordcount.log")
+    static def WORD_COUNT_FILES = new Job.Files(WORD_COUNT_JAR, WORD_COUNT_IN,
+        WORD_COUNT_OUT, WORD_COUNT_LOG)
+    static def WORD_COUNT_WANT = new File("src/test/resources/SampleJob/sample-output.txt")
 
-    def setupSpec() {
-        try { OUT.delete() } catch (_) {}
-        try { LOG.delete() } catch (_) {}
-        try { BAD_OUT.delete() } catch (_) {}
-        try { BAD_LOG.delete() } catch (_) {}
-        try { WORD_COUNT_OUT.delete() } catch (_) {}
-        try { WORD_COUNT_LOG.delete() } catch (_) {}
+    static def USE_MEMORY_FILES = new Job.Files("src/test/resources/test_jobs/use_memory");
+    static def TAKE_TIME_FILES = new Job.Files("src/test/resources/test_jobs/take_time");
+
+    def setup() {
+        deleteOutput()
     }
 
     def cleanup() {
-        try { OUT.delete() } catch (_) {}
-        try { LOG.delete() } catch (_) {}
-        try { BAD_OUT.delete() } catch (_) {}
-        try { BAD_LOG.delete() } catch (_) {}
+        deleteOutput()
     }
 
     def "delegates #currentStatus to tracker#current"() {
         given:
-        StatusTracker tracker = Mock()
+        def StatusTracker tracker = Mock()
         1 * tracker.current() >> want
         0 * _
         def job = new Job(FILES, tracker)
@@ -139,11 +134,11 @@ class JobTest extends Specification {
         log == files.log
     }
 
+    @Ignore("Takes a long time")
     def "Runs wordcount with expected output"() {
         given:
         StatusTracker tracker = Mock()
-        def files = new Job.Files(WORD_COUNT_JAR, WORD_COUNT_IN, WORD_COUNT_OUT, WORD_COUNT_LOG)
-        def job = new Job(files, tracker)
+        def job = new Job(WORD_COUNT_FILES, tracker)
 
         when: job.run()
         then:
@@ -156,13 +151,61 @@ class JobTest extends Specification {
         want.equals(got)
     }
 
-    // TODO
     def "Jobs timeout correctly"() {
+        given:
+        StatusTracker tracker = Mock()
+        def job = new Job(TAKE_TIME_FILES, tracker, Job.NO_LIMIT, timeout)
 
+        when: job.run()
+        then:
+        1 * tracker.start()
+        1 * tracker.finish(ok)
+        0 * _
+
+        where:
+        timeout || ok
+        -1      || true
+        0       || true
+        1       || false
+        2       || false
+        3       || false
+        4       || false
+        // Grace area - actual expected time taken is 5 seconds.
+        6       || true
+        7       || true
     }
 
-    // TODO
     def "Jobs run out of memory correctly"() {
+        given:
+        StatusTracker tracker = Mock()
+        def job = new Job(USE_MEMORY_FILES, tracker, memLimit, Job.NO_TIMEOUT)
 
+        when: job.run()
+        then:
+        1 * tracker.start()
+        1 * tracker.finish(ok)
+        0 * _
+
+        where:
+        memLimit || ok
+        -1       || true
+        0        || true
+        1        || false
+        2        || false
+        3        || false
+        // Grace area - actual expected memory required is just over 4MB.
+        6        || true
+        7        || true
+    }
+
+    def deleteOutput() {
+        try { FILES.out.delete() } catch (_) {}
+        try { FILES.log.delete() } catch (_) {}
+        try { BAD_FILES.out.delete() } catch (_) {}
+        try { BAD_FILES.log.delete() } catch (_) {}
+        try { WORD_COUNT_OUT.delete() } catch (_) {}
+        try { WORD_COUNT_LOG.delete() } catch (_) {}
+        try { USE_MEMORY_FILES.out.delete() } catch (_) {}
+        try { USE_MEMORY_FILES.log.delete() } catch (_) {}
     }
 }
