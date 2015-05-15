@@ -80,9 +80,16 @@ public class Job implements Runnable {
     }
 
     @Override
+    /**
+     * Runs the Job, as specified, in a new process.
+     * <p/>
+     * This method may only be called once.
+     * It returns after the job's process terminates,
+     * at which point the output may be taken from the
+     * job's output and log files.
+     */
     final public void run() {
-        // TODO add
-        final boolean FAILURE = false;
+        // TODO add timeout.
 
         // Enforce run-once semantics by checking and advancing state.
         this.tracker.start();
@@ -95,9 +102,17 @@ public class Job implements Runnable {
         this.tracker.finish(ok);
     }
 
+    /**
+     * Runs the job process.
+     * @return whether the job completed successfully or not.
+     */
     private boolean runJVM() {
+        // Begin with $ java ...
         final ProcessBuilder pb = new ProcessBuilder(JAVA);
 
+        // Use the memory limit as a heap size limit (in MB),
+        // if one was provided.
+        // ... -Xmx<memLimit>M ...
         if (this.memoryLimit != NO_LIMIT) {
             pb.command().add(String.format("-Xmx%dM", this.memoryLimit));
         }
@@ -107,19 +122,25 @@ public class Job implements Runnable {
         //     give it a timeout
         // }
 
-        Collections.addAll(pb.command(), JAR_FLAG, this.files.jar.toString(),
-            this.files.in.toString(), this.files.out.toString());
+        // ... -jar job_name.jar ...
+        Collections.addAll(pb.command(), JAR_FLAG, this.files.jar.toString());
+
+        // ... job_name.in job_name.out ...
+        Collections.addAll(pb.command(), this.files.in.toString(), this.files.out.toString());
+
+        // ... &> job_name.log
         pb.redirectErrorStream(true);
         pb.redirectOutput(this.files.log);
 
+        // The process is completely constructed, so run it.
         try {
             final Process p = pb.start();
-            return p.waitFor() == 0;
+            return p.waitFor() == 0; // Zero exit code indicates success.
         } catch (IOException | InterruptedException e) {
             // TODO log this nicely
             System.out.printf("Job#run:  %s caught:  %s\n", e.getClass(), e.getMessage());
 
-            return false;
+            return false; // If there was an exception, the Job failed.
         }
     }
 
