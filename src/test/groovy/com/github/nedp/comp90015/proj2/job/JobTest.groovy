@@ -1,6 +1,6 @@
 package com.github.nedp.comp90015.proj2.job
 
-import spock.lang.IgnoreRest
+import spock.lang.Ignore
 
 import java.nio.file.Files
 
@@ -32,6 +32,7 @@ class JobTest extends Specification {
     static def WORD_COUNT_WANT = new File("src/test/resources/SampleJob/sample-output.txt")
 
     static def USE_MEMORY_FILES = new Job.Files("src/test/resources/test_jobs/use_memory");
+    static def TAKE_TIME_FILES = new Job.Files("src/test/resources/test_jobs/take_time");
 
     def setup() {
         deleteOutput()
@@ -133,6 +134,7 @@ class JobTest extends Specification {
         log == files.log
     }
 
+    @Ignore("Takes a long time")
     def "Runs wordcount with expected output"() {
         given:
         StatusTracker tracker = Mock()
@@ -149,15 +151,34 @@ class JobTest extends Specification {
         want.equals(got)
     }
 
-    // TODO
     def "Jobs timeout correctly"() {
+        given:
+        StatusTracker tracker = Mock()
+        def job = new Job(TAKE_TIME_FILES, tracker, Job.NO_LIMIT, timeout)
 
+        when: job.run()
+        then:
+        1 * tracker.start()
+        1 * tracker.finish(ok)
+        0 * _
+
+        where:
+        timeout || ok
+        -1      || true
+        0       || true
+        1       || false
+        2       || false
+        3       || false
+        4       || false
+        // Grace area - actual expected time taken is 5 seconds.
+        6       || true
+        7       || true
     }
 
     def "Jobs run out of memory correctly"() {
         given:
         StatusTracker tracker = Mock()
-        def job = new Job(USE_MEMORY_FILES, tracker, memLimit)
+        def job = new Job(USE_MEMORY_FILES, tracker, memLimit, Job.NO_TIMEOUT)
 
         when: job.run()
         then:

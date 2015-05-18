@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Runs a JAR in a separate JVM process.
@@ -20,17 +21,17 @@ import java.util.Collections;
 @SuppressWarnings("unused") // TODO Dependents aren't implemented yet.
 public class Job implements Runnable {
 
+    public static final int NO_LIMIT = -1;
+    public static final int NO_TIMEOUT = -1;
 
     private static final String JAVA = "java";
     private static final String JAR_FLAG = "-jar";
-    private static final int NO_LIMIT = -1;
-    private static final int NO_TIMEOUT = -1;
 
     @NotNull
     private final Files files;
 
     private final int memoryLimit; // in MB
-    // TODO private final int timeout; // in seconds
+    private final int timeout; // in seconds
 
     private final StatusTracker tracker;
 
@@ -48,7 +49,7 @@ public class Job implements Runnable {
         this.files = files;
         this.tracker = tracker;
         this.memoryLimit = NO_LIMIT;
-        // TODO this.timeout = NO_TIMEOUT;
+        this.timeout = NO_TIMEOUT;
     }
 
     /**
@@ -59,21 +60,19 @@ public class Job implements Runnable {
      * @param tracker  not null, should be ready to {@link StatusTracker#start}
      * @param memoryLimit  maximum number of megabytes of RAM to allocate to the job,
      *                     no limit if non-positive
-     * //TODO @param timeout  maximum number of seconds to wait for the job to finish,
+     * @param timeout  maximum number of seconds to wait for the job to finish,
      *                 no limit if non-positive.
      */
-    //public Job(@NotNull Files files, @NotNull StatusTracker tracker, int memoryLimit, int timeout) {
-    public Job(@NotNull Files files, @NotNull StatusTracker tracker, int memoryLimit) {
+    public Job(@NotNull Files files, @NotNull StatusTracker tracker, int memoryLimit, int timeout) {
         if (memoryLimit < 1) {
             memoryLimit = NO_LIMIT;
         }
         this.memoryLimit = memoryLimit;
 
-        // TODO
-        // if (timeout < 1) {
-        //     timeout = NO_TIMEOUT;
-        // }
-        //this.timeout = timeout;
+        if (timeout < 1) {
+            timeout = NO_TIMEOUT;
+        }
+        this.timeout = timeout;
 
         this.files = files;
         this.tracker = tracker;
@@ -117,11 +116,6 @@ public class Job implements Runnable {
             pb.command().add(String.format("-Xmx%dM", this.memoryLimit));
         }
 
-        // TODO timeout
-        // if (this.timeout != NO_TIMEOUT) {
-        //     give it a timeout
-        // }
-
         // ... -jar job_name.jar ...
         Collections.addAll(pb.command(), JAR_FLAG, this.files.jar.toString());
 
@@ -132,10 +126,18 @@ public class Job implements Runnable {
         pb.redirectErrorStream(true);
         pb.redirectOutput(this.files.log);
 
-        // The process is completely constructed, so run it.
+        // Run the process; zero exit codes indicate success.
+        // If we have a timeout value, use it; running out of
+        // time counts as a failure.
         try {
             final Process p = pb.start();
-            return p.waitFor() == 0; // Zero exit code indicates success.
+            if (this.timeout == NO_TIMEOUT) {
+                return p.waitFor() == 0;
+            } else {
+                final boolean didFinish = p.waitFor(this.timeout, TimeUnit.SECONDS);
+                p.destroyForcibly().waitFor();
+                return didFinish && (p.exitValue() == 0);
+            }
         } catch (IOException | InterruptedException e) {
             // TODO log this nicely
             System.out.printf("Job#run:  %s caught:  %s\n", e.getClass(), e.getMessage());
