@@ -19,9 +19,8 @@ class JobManagerTest extends Specification {
     }
 
     def "#execute(job) stores and returns the correct Result"() {
-        given:
-        def job = Mock(Job)
         0 * _
+        given: def job = Mock(Job)
         and: "the job should be added with no Result"
         1 * jobResults.put(job, Optional.empty())
         and: "allocation and execution should be delegated to the WorkerPool"
@@ -36,9 +35,8 @@ class JobManagerTest extends Specification {
     }
 
     def "#execute(job) propogates exceptions correctly"() {
-        given:
-        def job = Mock(Job)
         0 * _
+        given: def job = Mock(Job)
         and: "allocation throws an exception"
         1 * pool.allocateAndSend(job) >> { throw new WorkerUnavailableException("intended") }
         and: "the job should be added with no result and not have a result set afterwards."
@@ -46,5 +44,32 @@ class JobManagerTest extends Specification {
 
         when: jm.execute(job)
         then: thrown(WorkerUnavailableException)
+    }
+
+    def "#result(job) retrieves the Result of the Job if tracked"() {
+        0 * _
+        given: def job = Mock(Job)
+        and: "jobResults returns the specified result on #get()"
+        1 * jobResults.get(job) >> result
+
+        expect: jm.resultOf(job) == result
+
+        where:
+        result << [
+            Optional.of(DISCONNECTED),
+            Optional.of(FAILED),
+            Optional.of(FINISHED),
+            Optional.empty(),
+        ]
+    }
+
+    def "#result(job) throws an exception for untracked Jobs"() {
+        0 * _
+        given: def job = Mock(Job)
+        and: "jobResults doesn't contain the job"
+        1 * jobResults.get(job) >> null
+
+        when: jm.resultOf(job)
+        then: thrown(IndexOutOfBoundsException)
     }
 }

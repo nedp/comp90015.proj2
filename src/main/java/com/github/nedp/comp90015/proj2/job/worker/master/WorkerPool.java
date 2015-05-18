@@ -3,7 +3,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
 import com.github.nedp.comp90015.proj2.job.Job;
 
 /**
- * Created by nedp on 18/05/15.
+ * TODO Created by nedp on 18/05/15.
  */
 public class WorkerPool {
     // TODO

@@ -40,12 +40,12 @@ public class JobManager {
      * Executes the specified {@link Job} via this' {@link WorkerPool}.
      * <p/>
      * Delegates Worker allocation and execution of the Job to
-     * this' WorkerPool, returning and storing the Result.
+     * this' WorkerPool, returning and storing the {@link Result}.
      * The method will return when the job terminates.
      * It has unspecified behaviour when called twice for the same Job.
      *
      * @param job the Job to be executed, not null
-     * @return the {@link Result} of the Job
+     * @return the Result of the Job, after it has executed
      * @throws WorkerUnavailableException when this' WorkerPool has no
      *                                    available Workers.
      */
@@ -56,5 +56,24 @@ public class JobManager {
         assert(Optional.empty().equals(
             this.jobResults.replace(job, Optional.of(result))));
         return result;
+    }
+
+    /**
+     * Returns the {@link Result} of the specified {@link Job}.
+     *
+     * @param job the Job of interest
+     * @return Optional.of(Result) if the Job has terminated,
+     *         otherwise Optional.empty
+     * @throws IndexOutOfBoundsException if the job is not tracked.
+     */
+    @NotNull
+    public Optional<Result> resultOf(@NotNull Job job) {
+        final Optional<Result> result = this.jobResults.get(job);
+        if (result == null) {
+            throw new IndexOutOfBoundsException(String.format(
+                "requested job is not tracked: %s", job));
+        } else {
+            return result;
+        }
     }
 }

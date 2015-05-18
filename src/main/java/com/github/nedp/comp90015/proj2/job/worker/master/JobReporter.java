@@ -9,7 +9,7 @@ import java.io.IOException;
  *
  * @author nedp
  */
-interface JobReporter {
+public interface JobReporter {
     /**
      * Reports to the user a {@link Result} and a {@link Job}.
      * <p/>
