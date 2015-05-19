@@ -24,7 +24,7 @@ class JobManagerTest extends Specification {
         and: "the job should be added with no Result"
         1 * jobResults.put(job, Optional.empty())
         and: "allocation and execution should be delegated to the WorkerPool"
-        1 * pool.allocateAndSend(job) >> result
+        1 * pool.allocateAndExecute(job) >> result
         and: "the correct Result should be set for the job"
         1 * jobResults.replace(job, Optional.of(result)) >> Optional.empty()
 
@@ -38,7 +38,7 @@ class JobManagerTest extends Specification {
         0 * _
         given: def job = Mock(Job)
         and: "allocation throws an exception"
-        1 * pool.allocateAndSend(job) >> { throw new WorkerUnavailableException("intended") }
+        1 * pool.allocateAndExecute(job) >> { throw new WorkerUnavailableException("intended") }
         and: "the job should be added with no result and not have a result set afterwards."
         1 * jobResults.put(job, Optional.empty())
 

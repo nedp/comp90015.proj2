@@ -52,7 +52,7 @@ public class JobManager {
     @NotNull
     public Result execute(@NotNull Job job) throws WorkerUnavailableException {
         this.jobResults.put(job, Optional.empty());
-        final Result result = this.pool.allocateAndSend(job);
+        final Result result = this.pool.allocateAndExecute(job);
         assert(Optional.empty().equals(
             this.jobResults.replace(job, Optional.of(result))));
         return result;
