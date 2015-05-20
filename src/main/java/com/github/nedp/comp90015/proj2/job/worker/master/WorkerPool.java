@@ -41,15 +41,20 @@ public class WorkerPool {
     /**
      * Allocates the specified {@link Job} to a {@link Worker} and
      * delegates execution of the Job to the Worker.
+     * <p/>
+     * Only RUNNING Workers (not DISCONNECTED) may have jobs
+     * allocated to them.
+     * If there are no such workers, an exception is thrown.
      *
      * @param job  the job to be executed, not null.
      * @return the {@link Result} of the job.
-     * @throws WorkerUnavailableException if there are no workers to
-     * allocate the Job to.
+     * @throws WorkerUnavailableException if there are no
+     * which the Job may be allocated to.
      */
     Result allocateAndExecute(Job job) throws WorkerUnavailableException {
         final int size = this.workerSet.size();
-        // Loop through the workers.
+
+        // **Loop** through the workers.
         // Throw an exception if there are no workers.
         if (this.iWorker >= size) {
             if (size == 0) {
@@ -58,9 +63,26 @@ public class WorkerPool {
             }
             this.iWorker = 0;
         }
-        // Allocate to the current worker (round robin).
-        final Result result = this.workerList.get(iWorker).execute(job);
-        this.iWorker += 1;
+
+        // Choose the first RUNNING worker.
+        int i = this.iWorker;
+        Worker chosenWorker = this.workerList.get(i);
+        while (chosenWorker.status() != WorkerStatus.RUNNING) {
+            i += 1;
+            if (i >= size) {
+                i = 0;
+            }
+            // Throw an exception if we tried all workers.
+            if (i == this.iWorker) {
+                throw new WorkerUnavailableException(
+                    "tried to allocate a job when all workers are DISCONNECTED" );
+            }
+            chosenWorker = this.workerList.get(i);
+        }
+        this.iWorker = i + 1;
+
+        // Allocate to the chosen worker (round robin).
+        final Result result = chosenWorker.execute(job);
 
         return result;
     }
