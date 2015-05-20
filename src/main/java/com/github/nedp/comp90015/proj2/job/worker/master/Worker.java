@@ -26,8 +26,40 @@ interface Worker {
      *     In this case, no files must be synchronised.</li>
      * </ul>
      *
-     * @param job the {@link Job} to be run by the worker
+     * @param job  the {@link Job} to be run by the worker
+     * @return the {@link Result} of the Job execution: <ul>
+     *     <li>DISCONNECTED if the Worker disconnected before finishing.</li>
+     *     <li>FAILED if the Job failed to complete without disconnecting.</li>
+     *     <li>FINISHED if the Job finished successfully.</li>
+     * </ul>
      */
     @NotNull
     Result execute(Job job);
+
+    /**
+     * Retrieves the last known status of the remote Worker.
+     * <p/>
+     * May request an update but doesn't have to.
+     */
+    @NotNull
+    WorkerStatus status();
+
+    /**
+     * Retrieves the last known CPU load of the remote Worker.
+     * <p/>
+     * May request an update but doesn't have to.
+     *
+     * @return the load on a scale where 0.0 = no usage,
+     * and 1.0 = nominal full usage.
+     */
+    double cpuLoad();
+
+    /**
+     * Retrieves the last known amount of free memory of the remote Worker.
+     * <p/>
+     * May request an update but doesn't have to.
+     *
+     * @return the number of bytes of free memory.
+     */
+    long freeMemory();
 }
