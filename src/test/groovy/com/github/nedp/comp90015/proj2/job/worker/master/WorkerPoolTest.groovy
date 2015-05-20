@@ -45,51 +45,9 @@ class WorkerPoolTest extends Specification {
 
         when: jobs.each { job -> wp.allocateAndExecute(job) }
         then: "each job should have been allocated to the appropriate worker"
-        jobs.eachWithIndex { job, i -> 1 * workerList[i % 5].execute(job) }
+        jobs.eachWithIndex { job, i -> 1 * workerList[i % 5].execute(job) >> Result.FINISHED }
     }
 
-    def "Disconnected workers don't have Jobs allocated to them"() {
-        0 * _
-        given:
-        workerList = eachIsRunning.collect { isRunning ->
-            def worker = Mock Worker
-            worker.status() >> (isRunning ? RUNNING : DISCONNECTED)
-            worker
-        }
-        def wp = new WorkerPool(workerList)
-        def jobs = (0..5).collect { Mock(Job) }
-
-        when: jobs.each { job -> wp.allocateAndExecute(job) }
-        then: "only workers which are running may recieve jobs"
-        workerList.eachWithIndex { worker, i ->
-            if (eachIsRunning[i]) {
-                worker.execute(_) >> Result.FINISHED
-            }
-        }
-
-        where:
-        eachIsRunning << [
-            [false, false, false, false, true],
-            [false, false, false, true, false],
-            [false, false, true, false, false],
-            [false, true, false, false, false],
-            [true, false, false, false, false],
-            [true, true, true, true, true],
-            [true, true, true, true, false],
-        ]
-    }
-
-    def "throw an exception if all workers are disconnected"() {
-        0 * _
-        given:
-        workerList = (0..10).collect { Mock(Worker) }
-        _.status() >> DISCONNECTED
-        def wp = new WorkerPool(workerList)
-        def job = Mock Job
-
-        when: wp.allocateAndExecute(job)
-        then: thrown(WorkerUnavailableException)
-    }
 
     def "Throws WorkerUnavailableExceptions if the pool is empty"() {
         0 * _
