@@ -3,7 +3,12 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
 import com.github.nedp.comp90015.proj2.job.Job;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.management.OperatingSystemMXBean;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Manages a set of {@link Worker}s, and allocates {@link Job}s to them.
@@ -15,19 +20,22 @@ import java.util.List;
  */
 public class WorkerPool {
     @NotNull
-    private final List<Worker> workers; // Must be a List for round robin.
+    private final List<Worker> workerList; // Must be a List for round robin.
 
-    private int iWorker = 0;
+    @NotNull
+    private final Set<Worker> workerSet; // Must be a Set to avoid duplicates.
+
+    private int iWorker = 0; // Current worker for round robin allocation.
 
     /**
      * Creates a WorkerPool storing {@link Worker}s in the supplied List.
      *
-     * @param initialWorkers  the list to store workers in, not null,
-     *                        may be populated.
-     *                        The provided list, not a copy, is injected.
+     * @param initialWorkers  a list of workers which should initially
+     *                        be contained in the pool.
      */
-    WorkerPool(@NotNull List<Worker> initialWorkers) {
-        this.workers = initialWorkers;
+    WorkerPool(@NotNull Collection<Worker> initialWorkers) {
+        this.workerList = new ArrayList<>(initialWorkers);
+        this.workerSet = new HashSet<>(initialWorkers);
     }
 
     /**
@@ -40,10 +48,10 @@ public class WorkerPool {
      * allocate the Job to.
      */
     Result allocateAndExecute(Job job) throws WorkerUnavailableException {
-        final int size = workers.size();
+        final int size = this.workerSet.size();
         // Loop through the workers.
         // Throw an exception if there are no workers.
-        if (this.iWorker >= this.workers.size()) {
+        if (this.iWorker >= size) {
             if (size == 0) {
                 throw new WorkerUnavailableException(
                     "tried to allocate a job in an empty WorkerPool" );
@@ -51,9 +59,41 @@ public class WorkerPool {
             this.iWorker = 0;
         }
         // Allocate to the current worker (round robin).
-        final Result result = this.workers.get(iWorker).execute(job);
+        final Result result = this.workerList.get(iWorker).execute(job);
         this.iWorker += 1;
 
         return result;
+    }
+
+    /**
+     * Adds a new {@link Worker} to the pool, if it isn't already included.
+     *
+     * @param worker  the Worker to be added, not null.
+     * @return true if the Worker was added to the pool,
+     * and false if the Worker was already present.
+     */
+    boolean add(@NotNull Worker worker) {
+        // Don't allow duplicate workers.
+        if (this.workerSet.contains(worker)) {
+            return false;
+        }
+
+        assert(this.workerSet.add(worker));
+        assert(this.workerList.add(worker));
+        return true;
+    }
+
+    /**
+     * Retrieves a list of all {@link Worker}s in the pool.
+     * <p/>
+     * Includes known Workers regardless of their status.
+     * Changing the returned list will not affect this WorkerPool.
+     *
+     * @return a new {@link List<Worker>} containing all the workers
+     * known by this WorkerPool.
+     */
+    @NotNull
+    List<Worker> workerList() {
+        return new ArrayList<>(this.workerList);
     }
 }
