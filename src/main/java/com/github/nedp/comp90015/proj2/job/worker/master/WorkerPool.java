@@ -25,7 +25,10 @@ public class WorkerPool {
     private int iWorker = 0; // Current worker for round robin allocation.
 
     /**
-     * Creates a WorkerPool storing {@link Worker}s in the supplied List.
+     * Populates a new WorkerPool with the supplied {@link Worker}s.
+     * <p/>
+     * The supplied list will only be used for initialisation,
+     * and may then be safely modified.
      *
      * @param initialWorkers  a list of workers which should initially
      *                        be contained in the pool.
@@ -33,6 +36,14 @@ public class WorkerPool {
     WorkerPool(@NotNull Collection<Worker> initialWorkers) {
         this.workerList = new ArrayList<>(initialWorkers);
         this.workerSet = new HashSet<>(initialWorkers);
+    }
+
+    /**
+     * Creates a WorkerPool with no initial {@link Worker}s.
+     */
+    WorkerPool() {
+        this.workerList = new ArrayList<>();
+        this.workerSet = new HashSet<>();
     }
 
     /**

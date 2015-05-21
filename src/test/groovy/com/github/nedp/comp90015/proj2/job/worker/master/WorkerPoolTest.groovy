@@ -48,7 +48,6 @@ class WorkerPoolTest extends Specification {
         jobs.eachWithIndex { job, i -> 1 * workerList[i % 5].execute(job) >> Result.FINISHED }
     }
 
-
     def "Throws WorkerUnavailableExceptions if the pool is empty"() {
         0 * _
         assert workerList.isEmpty()

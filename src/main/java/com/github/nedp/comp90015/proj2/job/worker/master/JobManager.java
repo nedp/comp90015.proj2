@@ -111,6 +111,24 @@ public class JobManager {
         }
     }
 
+    /**
+     * Returns the {@link Job} with the specified id.
+     *
+     * @param id  the integer id of the Job of interest.
+     * @return the Job object of interest.
+     * @throws IndexOutOfBoundsException if the job is not tracked.
+     */
+    @NotNull
+    public Job get(int id) {
+        final JobResult jobResult = this.jobResults.get(id);
+        if (jobResult == null) {
+            throw new IndexOutOfBoundsException(String.format(
+                "no job with the requested id (%d) is tracked", id));
+        } else {
+            return jobResult.job;
+        }
+    }
+
     private static class JobResult {
         @NotNull private final Job job;
         @NotNull private Optional<Result> result;
