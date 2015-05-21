@@ -62,4 +62,14 @@ interface Worker {
      * @return the number of bytes of free memory.
      */
     long freeMemory();
+
+    /**
+     * Retrieves the identifier of the worker.
+     * <p/>
+     * The identifier must uniquely identify a particular Worker.
+     * It could be, for example, "hostname:port".
+     *
+     * @return the identifier as a String.
+     */
+    String identifier();
 }
