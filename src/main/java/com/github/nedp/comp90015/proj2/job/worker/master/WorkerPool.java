@@ -107,8 +107,10 @@ public class WorkerPool {
             return false;
         }
 
-        assert(this.workerSet.add(worker));
-        assert(this.workerList.add(worker));
+        boolean ok = this.workerSet.add(worker);
+        assert(ok);
+        ok = this.workerList.add(worker);
+        assert(ok);
         return true;
     }
 
