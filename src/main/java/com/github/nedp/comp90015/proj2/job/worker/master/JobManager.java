@@ -69,7 +69,7 @@ public class JobManager {
         final Job job = this.jobResults.get(id).job;
         final Result result = this.pool.allocateAndExecute(job);
 
-        assert(Optional.empty().equals(this.jobResults.get(id).result));
+        assert(!this.jobResults.get(id).result.isPresent());
         this.jobResults.set(id, new JobResult(job, Optional.of(result)));
         return result;
     }
