@@ -4,72 +4,87 @@ import com.github.nedp.comp90015.proj2.job.Job
 import static com.github.nedp.comp90015.proj2.job.worker.master.Result.*;
 
 import spock.lang.Specification
+
 /**
  * Created by nedp on 18/05/15.
  */
 class JobManagerTest extends Specification {
-    def pool
-    def jobResults
-    def jm
+    JobManager testTarget
+    WorkerPool pool
+    Job job
+    int id
+    Result result
 
     def setup() {
-        pool = Mock(WorkerPool)
-        jobResults = Mock(Map)
-        jm = new JobManager(pool, jobResults)
+        job = Mock Job
+        pool = Mock WorkerPool
+        testTarget = new JobManager(pool)
     }
 
-    def "#execute(job) stores and returns the correct Result"() {
-        0 * _
-        given: def job = Mock(Job)
-        and: "the job should be added with no Result"
-        1 * jobResults.put(job, Optional.empty())
-        and: "allocation and execution should be delegated to the WorkerPool"
-        1 * pool.allocateAndExecute(job) >> result
-        and: "the correct Result should be set for the job"
-        1 * jobResults.replace(job, Optional.of(result)) >> Optional.empty()
-
-        expect: result == jm.execute(job)
-
-        where:
-        result << [DISCONNECTED, FAILED, FINISHED]
+    def "#submit(job) stores the job with no result"() {
+        given: jobIsSubmitted()
+        expect: resultIsNotPresent()
     }
+
+    def "#execute(job) stores and returns the result of the job"() {
+        given: jobIsSubmitted()
+
+        when: jobIsExecuted()
+        then: interaction { poolAllocatesProducing expected }
+
+        expect: executionResultWas expected
+        and: storedResultIs expected
+
+        where: expected << [DISCONNECTED, FAILED, FINISHED]
+    }
+
+
 
     def "#execute(job) propogates exceptions correctly"() {
-        0 * _
-        given: def job = Mock(Job)
-        and: "allocation throws an exception"
-        1 * pool.allocateAndExecute(job) >> { throw new WorkerUnavailableException("intended") }
-        and: "the job should be added with no result and not have a result set afterwards."
-        1 * jobResults.put(job, Optional.empty())
+        given: jobIsSubmitted()
 
-        when: jm.execute(job)
+        when: jobIsExecuted()
+        then: interaction { emptyPoolAllocationFails() }
         then: thrown(WorkerUnavailableException)
-    }
 
-    def "#result(job) retrieves the Result of the Job if tracked"() {
-        0 * _
-        given: def job = Mock(Job)
-        and: "jobResults returns the specified result on #get()"
-        1 * jobResults.get(job) >> result
-
-        expect: jm.resultOf(job) == result
-
-        where:
-        result << [
-            Optional.of(DISCONNECTED),
-            Optional.of(FAILED),
-            Optional.of(FINISHED),
-            Optional.empty(),
-        ]
+        expect: resultIsNotPresent()
     }
 
     def "#result(job) throws an exception for untracked Jobs"() {
-        0 * _
-        given: def job = Mock(Job)
-        and: "jobResults doesn't contain the job"
-        1 * jobResults.get(job) >> null
-
-        when: jm.resultOf(job)
+        given: "the job was not submitted"; id = 0
+        when: testTarget.resultOf(id)
         then: thrown(IndexOutOfBoundsException)
+    }
+
+    /*
+     * Helpers
+     */
+
+    def jobIsSubmitted() {
+        id = testTarget.submit(job)
+    }
+
+    def jobIsExecuted() {
+        result = testTarget.execute(id)
+    }
+
+    def poolAllocatesProducing(Result result) {
+        1 * pool.allocateAndExecute(job) >> result
+    }
+
+    def emptyPoolAllocationFails() {
+        1 * pool.allocateAndExecute(job) >> { throw new WorkerUnavailableException("expected") }
+    }
+
+    def resultIsNotPresent() {
+        !testTarget.resultOf(id).isPresent()
+    }
+
+    def executionResultWas(Result expected) {
+        result == expected
+    }
+
+    def storedResultIs(Result expected) {
+        testTarget.resultOf(id) == Optional.of(expected)
     }
 }
