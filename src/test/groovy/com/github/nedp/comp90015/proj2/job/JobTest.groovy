@@ -207,5 +207,7 @@ class JobTest extends Specification {
         try { WORD_COUNT_LOG.delete() } catch (_) {}
         try { USE_MEMORY_FILES.out.delete() } catch (_) {}
         try { USE_MEMORY_FILES.log.delete() } catch (_) {}
+        try { TAKE_TIME_FILES.out.delete() } catch (_) {}
+        try { TAKE_TIME_FILES.log.delete() } catch (_) {}
     }
 }
