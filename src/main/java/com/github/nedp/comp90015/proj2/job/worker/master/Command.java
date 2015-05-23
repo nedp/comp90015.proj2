@@ -172,7 +172,7 @@ enum Command {
     }
 
     @NotNull
-    static Optional<Command> fromWord(@NotNull String word) {
+    static Optional<Command> FromWord(@NotNull String word) {
         switch (word) {
             case "add":
             case "addw":
