@@ -38,22 +38,38 @@ class JobManagerTest extends Specification {
         where: expected << [DISCONNECTED, FAILED, FINISHED]
     }
 
-
-
     def "#execute(job) propogates exceptions correctly"() {
         given: jobIsSubmitted()
 
         when: jobIsExecuted()
         then: interaction { emptyPoolAllocationFails() }
-        then: thrown(WorkerUnavailableException)
+        then: thrown WorkerUnavailableException
 
         expect: resultIsNotPresent()
     }
 
-    def "#result(job) throws an exception for untracked Jobs"() {
+    /*
+     * Non-contract behaviour:
+     */
+    def "#execute, #resultOf, and #hasAllocated throw an exception for untracked Jobs"() {
         given: "the job was not submitted"; id = 0
+
+        when: testTarget.execute(id)
+        then: thrown IndexOutOfBoundsException
+
         when: testTarget.resultOf(id)
-        then: thrown(IndexOutOfBoundsException)
+        then: thrown IndexOutOfBoundsException
+
+        when: testTarget.hasAllocated(id)
+        then: thrown IndexOutOfBoundsException
+    }
+
+    def "#execute throws an exception for already-allocated Jobs"() {
+        given: jobIsSubmitted()
+        and: jobIsAllocated()
+
+        when: testTarget.execute(id)
+        then: thrown IllegalStateException
     }
 
     /*
@@ -66,6 +82,10 @@ class JobManagerTest extends Specification {
 
     def jobIsExecuted() {
         result = testTarget.execute(id)
+    }
+
+    def jobIsAllocated() {
+        testTarget.jobResults.get(id).hasBeenAllocated = true
     }
 
     def poolAllocatesProducing(Result result) {

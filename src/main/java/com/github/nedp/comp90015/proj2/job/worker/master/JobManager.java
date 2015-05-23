@@ -57,30 +57,29 @@ public class JobManager {
      * Delegates Worker allocation and execution of the Job to
      * this' WorkerPool, returning and storing the {@link Result}.
      * The method will return when the job terminates.
-     * It has unspecified behaviour when called twice for the same Job.
+     * Jobs may only be executed once.
      *
-     * @param id  the unique integer id of the Job to be executed.
+     * @param id  the unique integer id of the Job to be executed,
+     *            must be for a Job which is not already allocated.
      * @return the Result of the Job, after it has executed
-     * @throws WorkerUnavailableException when this' WorkerPool has no
-     *                                    available Workers.
+     * @throws WorkerUnavailableException when this' WorkerPool has
+     * no available Workers.
+     * In this case, the call may subsequently be repeated.
      */
     @NotNull
     public Result execute(int id) throws WorkerUnavailableException {
-        final Job job = this.jobResults.get(id).job;
-        final Result result = this.pool.allocateAndExecute(job);
-
-        assert(!this.jobResults.get(id).result.isPresent());
-        this.jobResults.set(id, new JobResult(job, Optional.of(result)));
-        return result;
+        return this.jobResults.get(id).execute(this.pool);
     }
 
     /**
      * Returns the {@link Result} of the specified {@link Job}.
+     * <p/>
+     * Not synchronized, read only.
      *
-     * @param id  the integer id of the Job of interest.
+     * @param id  the integer id of the Job of interest,
+     *            must correspond to a tracked Job.
      * @return Optional.of(Result) if the Job has terminated,
      *         otherwise Optional.empty
-     * @throws IndexOutOfBoundsException if the job is not tracked.
      */
     @NotNull
     public Optional<Result> resultOf(int id) {
@@ -93,13 +92,48 @@ public class JobManager {
         }
     }
 
-    private class JobResult {
+    /**
+     * Reports whether the {@link Job} with the specified id has been allocated.
+     * <p/>
+     * Not synchronised, read only.
+     *
+     * @param id  the integer id of the Job of interest,
+     *            must correspond to a tracked Job.
+     * @return true if the Job has been allocated, otherwise false.
+     */
+    public boolean hasAllocated(int id) {
+        final JobResult jobResult = this.jobResults.get(id);
+        if (jobResult == null) {
+            throw new IndexOutOfBoundsException(String.format(
+                "no job with the requested id (%d) is tracked", id));
+        } else {
+            return this.jobResults.get(id).hasBeenAllocated;
+        }
+    }
+
+    private static class JobResult {
         @NotNull private final Job job;
-        @NotNull private final Optional<Result> result;
+        @NotNull private Optional<Result> result;
+        private boolean hasBeenAllocated = false;
 
         private JobResult(@NotNull Job job, @NotNull Optional<Result> result) {
             this.job = job;
             this.result = result;
+        }
+
+        /*
+         * Ensure that the job hasn't been allocated,
+         * then allocate and execute it via the WorkerPool.
+         * Synchronised to enforce run-once semantics.
+         */
+        private synchronized Result execute(WorkerPool pool) throws WorkerUnavailableException {
+            if (this.hasBeenAllocated) {
+                throw new IllegalStateException("tried to allocate a job twice");
+            }
+            final Result result = pool.allocateAndExecute(this.job);
+            this.result = Optional.of(result);
+            this.hasBeenAllocated = true;
+            return result;
         }
     }
 }
