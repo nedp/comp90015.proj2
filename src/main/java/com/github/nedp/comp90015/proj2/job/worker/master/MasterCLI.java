@@ -28,7 +28,7 @@ class MasterCLI {
 
             // Parse the command from the System.out, reporting bad commands.
             final String commandName = line.next();
-            final Optional<Command> command = Command.fromWord(commandName);
+            final Optional<Command> command = Command.FromWord(commandName);
 
             if (!command.isPresent()) {
                 System.out.printf("command not recognised: %s\n", commandName);

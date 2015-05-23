@@ -10,121 +10,206 @@ import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.*
  * Created by nedp on 19/05/15.
  */
 class WorkerPoolTest extends Specification {
-    List<Worker> workerList
+    WorkerPool underTest
+    WorkerPool startedEmpty
+    Job job
+    Collection<Job> jobs
+    Worker worker
+    Collection<Worker> workers
+    Collection<Result> results
 
     def setup() {
-        workerList = new ArrayList<Worker>();
+        job = Stub Job
+        jobs = new ArrayList<>();
+        worker = Mock Worker
+        workers = new ArrayList<>();
+        results = new ArrayList<>();
     }
 
     def "Delegates job execution to a Worker"() {
-        given: "there is a mock job and worker producing a given result"
-        def job = Mock Job
-        def worker = Mock Worker
-        1 * worker.execute(job) >> result
-        worker.status() >> RUNNING
+        0 * _
+        given: workersAre RUNNING
+        and: poolsStartEmpty()
+        and: poolsAdd worker
 
-        and: "the worker list 'contains' the mock worker"
-        workerList.add(worker);
-        def wp = new WorkerPool(workerList);
+        when: poolsAllocateAndExecute job
+        then: interaction { workerExecutesPerPool job, expected }
+        expect: resultsAre expected
 
-        expect: result == wp.allocateAndExecute(job)
-
-        where:
-        result << [Result.FINISHED, Result.FAILED, Result.DISCONNECTED]
+        where: expected << [Result.FINISHED, Result.FAILED, Result.DISCONNECTED]
     }
 
     def "Uses round robin allocation"() {
         0 * _
-        given: "There are 13 jobs for 5 RUNNING Workers"
-        workerList = (1..5).collect {
-            def worker = Mock Worker
-            worker.status() >> RUNNING
-            worker
-        }
-        def jobs = (1..13).collect { Mock(Job) }
-        def wp = new WorkerPool(workerList)
+        given: workerCountIs 5
+        and: workersAre RUNNING
+        and: poolsStartWith workers
+        and: jobCountIs 13
 
-        when: jobs.each { job -> wp.allocateAndExecute(job) }
-        then: "each job should have been allocated to the appropriate worker"
-        jobs.eachWithIndex { job, i -> 1 * workerList[i % 5].execute(job) >> Result.FINISHED }
+        when: poolsAllocateAndExecuteJobs()
+        then: interaction { allocationIsRoundRobinReturning expected }
+
+        where: expected << [Result.FINISHED, Result.FAILED, Result.DISCONNECTED]
     }
 
     def "Throws WorkerUnavailableExceptions if the pool is empty"() {
         0 * _
-        assert workerList.isEmpty()
-        given: def wp = new WorkerPool(workerList)
-        when: wp.allocateAndExecute(Mock(Job))
-        then: thrown(WorkerUnavailableException)
+        given: poolsStartEmpty()
+        when: poolsAllocateAndExecute job
+        then: thrown WorkerUnavailableException
     }
 
     def "Unique Workers may be added to the pool"() {
         0 * _
-        given:
-        def worker = Mock Worker
-        if (alreadyPresent) {
-            workerList.add(worker);
-        }
-        def wp = new WorkerPool(workerList)
+        given: poolsStartWith alreadyPresent ? [worker] : []
 
-        expect: "can only add a worker if not present"
-        wp.add(worker) != alreadyPresent
-        and: "can't add the same worker twice"
-        !wp.add(worker)
-        and: "can always add a completely new worker"
-        wp.add(Mock(Worker))
+        expect: poolsAddIf worker, !alreadyPresent
+        and: poolsCantAdd worker
+        and: poolsAdd Stub(Worker)
 
         where: alreadyPresent << [true, false]
     }
 
     def "A list of known workers is available"() {
         0 * _
-        given:
-        workerList = (1..5).collect { Mock(Worker) }
-        def wp = new WorkerPool(workerList)
-
-        expect: wp.workerList() == workerList
+        given: workerCountIs 5
+        and: poolsStartWith workers
+        expect: poolsContainOnly workers
     }
 
     def "Disconnected workers don't have Jobs allocated to them"() {
         0 * _
-        given:
-        workerList = eachIsRunning.collect { isRunning ->
-            def worker = Mock Worker
-            worker.status() >> (isRunning ? RUNNING : DISCONNECTED)
-            worker
-        }
-        def wp = new WorkerPool(workerList)
-        def jobs = (0..5).collect { Mock(Job) }
+        given: workerCountIs 4
+        and: workersHaveStatuses statuses
+        and: poolsStartWith workers
+        and: jobCountIs 4
 
-        when: jobs.each { job -> wp.allocateAndExecute(job) }
-        then: "only workers which are running may recieve jobs"
-        workerList.eachWithIndex { worker, i ->
-            if (eachIsRunning[i]) {
-                worker.execute(_) >> Result.FINISHED
-            }
-        }
+        when: poolsAllocateAndExecuteJobs()
+        then: interaction { workersFinishJobsIfRunning() }
+        expect: resultsAre Result.FINISHED
 
         where:
-        eachIsRunning << [
-            [false, false, false, false, true],
-            [false, false, false, true, false],
-            [false, false, true, false, false],
-            [false, true, false, false, false],
-            [true, false, false, false, false],
-            [true, true, true, true, true],
-            [true, true, true, true, false],
+        statuses << [
+            [DISCONNECTED, DISCONNECTED, DISCONNECTED, RUNNING],
+            [DISCONNECTED, DISCONNECTED, RUNNING,      DISCONNECTED],
+            [DISCONNECTED, DISCONNECTED, RUNNING,      RUNNING],
+            [DISCONNECTED, RUNNING,      DISCONNECTED, DISCONNECTED],
+            [DISCONNECTED, RUNNING,      DISCONNECTED, RUNNING],
+            [DISCONNECTED, RUNNING,      RUNNING,      DISCONNECTED],
+            [DISCONNECTED, RUNNING,      RUNNING,      RUNNING],
+            [RUNNING,      DISCONNECTED, DISCONNECTED, DISCONNECTED],
+            [RUNNING,      DISCONNECTED, DISCONNECTED, RUNNING],
+            [RUNNING,      DISCONNECTED, RUNNING,      DISCONNECTED],
+            [RUNNING,      DISCONNECTED, RUNNING,      RUNNING],
+            [RUNNING,      RUNNING,      DISCONNECTED, DISCONNECTED],
+            [RUNNING,      RUNNING,      DISCONNECTED, RUNNING],
+            [RUNNING,      RUNNING,      RUNNING,      DISCONNECTED],
+            [RUNNING,      RUNNING,      RUNNING,      RUNNING],
         ]
     }
 
     def "throw an exception if all workers are disconnected"() {
         0 * _
-        given:
-        workerList = (0..10).collect { Mock(Worker) }
-        _.status() >> DISCONNECTED
-        def wp = new WorkerPool(workerList)
-        def job = Mock Job
+        given: workerCountIs 10
+        and: workersAre DISCONNECTED
+        and: poolsStartWith workers
 
-        when: wp.allocateAndExecute(job)
-        then: thrown(WorkerUnavailableException)
+        when: poolsAllocateAndExecute job
+        then: thrown WorkerUnavailableException
+    }
+
+    /*
+     * Helpers
+     */
+
+    def workersAre(Worker.Status status) {
+        workers.each { it.status() >> status }
+        worker.status() >> status
+    }
+
+    def workersHaveStatuses(ArrayList<Worker.Status> statuses) {
+        workers.eachWithIndex { worker, i -> worker.status() >> statuses[i] }
+    }
+
+    def workerCountIs(int n) {
+        workers.addAll((1..n).collect { Mock(Worker) })
+    }
+
+    def jobCountIs(int n) {
+        jobs.addAll n.collect { Stub(Job) }
+    }
+
+    def poolsStartEmpty() {
+        underTest = new WorkerPool(new ArrayList())
+        startedEmpty = new WorkerPool()
+    }
+
+    def poolsStartWithJust(Worker worker) {
+        underTest = new WorkerPool([worker])
+        startedEmpty = new WorkerPool()
+        assert startedEmpty.add(worker)
+    }
+
+    def poolsStartWith(Collection<Worker> workers) {
+        underTest = new WorkerPool(workers)
+        startedEmpty = new WorkerPool()
+        workers.each { assert startedEmpty.add(it) }
+    }
+
+    def poolsAdd(Worker worker) {
+        assert underTest.add(worker)
+        assert startedEmpty.add(worker)
+        true
+    }
+
+    def poolsAddIf(Worker worker, boolean condition) {
+        assert underTest.add(worker) == condition
+        assert startedEmpty.add(worker) == condition
+        true
+    }
+
+    def poolsCantAdd(Worker worker) {
+        assert !underTest.add(worker)
+        assert !startedEmpty.add(worker)
+        true
+    }
+
+    def poolsContainOnly(Collection<Worker> workers) {
+        assert underTest.workerList().containsAll(workers)
+        assert workers.containsAll(underTest.workerList())
+        true
+    }
+
+    def resultsAre(Result expected) {
+        results.each { assert it == expected }
+        true
+    }
+
+    def poolsAllocateAndExecute(Job job) {
+        results.add underTest.allocateAndExecute(job)
+        results.add startedEmpty.allocateAndExecute(job)
+    }
+
+    def poolsAllocateAndExecuteJobs() {
+        jobs.each {
+            results.add underTest.allocateAndExecute(it)
+            results.add startedEmpty.allocateAndExecute(it)
+        }
+    }
+
+    def allocationIsRoundRobinReturning(Result result) {
+        jobs.eachWithIndex { job, i -> 2 * workers[i % 5].execute(job) >> result }
+    }
+
+    def workerExecutesPerPool(Job job, Result result) {
+        2 * worker.execute(job) >> result
+    }
+
+    def workersFinishJobsIfRunning() {
+        workers.each {
+            if (it.status() == RUNNING) {
+                it.execute(_ as Job) >> Result.FINISHED
+            }
+        }
     }
 }
