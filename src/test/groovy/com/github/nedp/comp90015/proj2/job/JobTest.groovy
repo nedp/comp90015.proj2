@@ -1,5 +1,6 @@
 package com.github.nedp.comp90015.proj2.job
 
+import org.codehaus.groovy.classgen.DummyClassGenerator
 import spock.lang.Ignore
 
 import java.nio.file.Files
@@ -196,6 +197,12 @@ class JobTest extends Specification {
         // Grace area - actual expected memory required is just over 4MB.
         6        || true
         7        || true
+    }
+
+    def "#name is correct"() {
+        given: Job underTest = new Job(files, Stub(StatusTracker))
+        expect: underTest.name() == files.jar.name
+        where: files << [FILES, BAD_FILES, WORD_COUNT_FILES, USE_MEMORY_FILES, TAKE_TIME_FILES]
     }
 
     def deleteOutput() {

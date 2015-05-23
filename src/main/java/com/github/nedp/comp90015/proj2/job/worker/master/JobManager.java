@@ -3,6 +3,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
 import com.github.nedp.comp90015.proj2.job.Job;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ import java.util.Optional;
  *
  * @author nedp
  */
-public class JobManager {
+class JobManager {
     @NotNull
     private final List<JobResult> jobResults;
     @NotNull
@@ -84,12 +85,8 @@ public class JobManager {
     @NotNull
     public Optional<Result> resultOf(int id) {
         final JobResult jobResult = this.jobResults.get(id);
-        if (jobResult == null) {
-            throw new IndexOutOfBoundsException(String.format(
-                "no job with the requested id (%d) is tracked", id));
-        } else {
-            return jobResult.result;
-        }
+        assert(jobResult != null);
+        return jobResult.result;
     }
 
     /**
@@ -103,30 +100,22 @@ public class JobManager {
      */
     public boolean hasAllocated(int id) {
         final JobResult jobResult = this.jobResults.get(id);
-        if (jobResult == null) {
-            throw new IndexOutOfBoundsException(String.format(
-                "no job with the requested id (%d) is tracked", id));
-        } else {
-            return this.jobResults.get(id).hasBeenAllocated;
-        }
+        assert(jobResult != null);
+        return this.jobResults.get(id).hasBeenAllocated;
     }
 
     /**
      * Returns the {@link Job} with the specified id.
      *
      * @param id  the integer id of the Job of interest.
-     * @return the Job object of interest.
+     * @return a String containing the name of the Job of interest.
      * @throws IndexOutOfBoundsException if the job is not tracked.
      */
     @NotNull
-    public Job get(int id) {
+    public String nameOf(int id) {
         final JobResult jobResult = this.jobResults.get(id);
-        if (jobResult == null) {
-            throw new IndexOutOfBoundsException(String.format(
-                "no job with the requested id (%d) is tracked", id));
-        } else {
-            return jobResult.job;
-        }
+        assert(jobResult != null);
+        return jobResult.job.name();
     }
 
     private static class JobResult {

@@ -16,17 +16,17 @@ class JobManagerTest extends Specification {
     Result result
 
     def setup() {
-        job = Mock Job
+        job = Stub Job
         pool = Mock WorkerPool
         testTarget = new JobManager(pool)
     }
 
-    def "#submit(job) stores the job with no result"() {
+    def "#submit stores the job with no result"() {
         given: jobIsSubmitted()
         expect: resultIsNotPresent()
     }
 
-    def "#execute(job) stores and returns the result of the job"() {
+    def "#execute stores and returns the result of the job"() {
         given: jobIsSubmitted()
 
         when: jobIsExecuted()
@@ -106,5 +106,9 @@ class JobManagerTest extends Specification {
 
     def storedResultIs(Result expected) {
         testTarget.resultOf(id) == Optional.of(expected)
+    }
+
+    def reportedNameIs(String expected) {
+        testTarget.nameOf(id) == expected
     }
 }

@@ -3,7 +3,8 @@ package com.github.nedp.comp90015.proj2.job.worker.master
 import com.github.nedp.comp90015.proj2.job.Job
 import spock.lang.Specification
 
-import static com.github.nedp.comp90015.proj2.job.worker.master.WorkerStatus.*
+import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.*
+
 
 /**
  * Created by nedp on 19/05/15.

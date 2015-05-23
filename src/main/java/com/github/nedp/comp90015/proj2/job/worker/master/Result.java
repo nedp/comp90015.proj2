@@ -5,6 +5,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
  *
  * @author nedp
  */
+@SuppressWarnings("unused") // TODO dependents not implemented
 public enum Result {
     DISCONNECTED,
     FINISHED,

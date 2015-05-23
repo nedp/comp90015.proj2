@@ -89,7 +89,7 @@ public class WorkerPool {
         }
         int i = this.iWorker == size ? 0 : this.iWorker;
         Worker chosenWorker = this.workerList.get(i);
-        while (chosenWorker.status() != WorkerStatus.RUNNING) {
+        while (chosenWorker.status() != Worker.Status.RUNNING) {
             i += 1;
             assert (i <= size);
             if (i == size) {

@@ -31,8 +31,7 @@ enum Command {
         @Override
         boolean runFor(@NotNull JobManager jobs,
                        @NotNull WorkerPool workers,
-                       @NotNull Scanner params,
-                       @NotNull String prompt) {
+                       @NotNull Scanner params) {
             // Parse params.
             final String hostname;
             final int port;
@@ -45,12 +44,13 @@ enum Command {
             }
 
             // Add the worker and report success.
-            final boolean ok = workers.add(new RemoteWorker(hostname, port));
+            final Worker worker = new RemoteWorker(hostname, port);
+            final boolean ok = workers.add(worker);
             if (ok) {
-                System.out.printf("Worker (%s:%d) added.\n", hostname, port);
+                System.out.printf("Worker (%s) added.\n", worker.identifier());
                 return true;
             } else {
-                System.out.printf("Failed to add Worker (%s:%d).\n", hostname, port);
+                System.out.printf("Worker (%s) already added.\n", worker.identifier());
                 return false;
             }
         }
@@ -59,8 +59,7 @@ enum Command {
         @Override
         boolean runFor(@NotNull JobManager jobs,
                        @NotNull WorkerPool workers,
-                       @NotNull Scanner params,
-                       @NotNull String prompt) {
+                       @NotNull Scanner params) {
             // Identify and report the status of each worker.
             System.out.printf("ID - Hostname:Port is Status\n");
             for (Worker worker : workers.workerList()) {
@@ -78,8 +77,7 @@ enum Command {
         @Override
         boolean runFor(@NotNull JobManager jobs,
                        @NotNull WorkerPool workers,
-                       @NotNull Scanner params,
-                       @NotNull String prompt) {
+                       @NotNull Scanner params) {
             // Parse params.
             final Job.Files files;
             final int memLimit;
@@ -102,7 +100,7 @@ enum Command {
             System.out.printf("Submitted the job with id %d\n", id);
 
             // Execute the job in a new thread.
-            final Thread thread = new Thread(() -> executeJob(jobs, files, id, prompt));
+            final Thread thread = new Thread(() -> executeJob(jobs, files, id));
             thread.setDaemon(true);
             thread.start();
             return true;
@@ -115,8 +113,7 @@ enum Command {
         @Override
         boolean runFor(@NotNull JobManager jobs,
                        @NotNull WorkerPool workers,
-                       @NotNull Scanner params,
-                       @NotNull String prompt) {
+                       @NotNull Scanner params) {
             // Parse params.
             final int id;
             try {
@@ -127,10 +124,10 @@ enum Command {
             }
 
             // Print the status of the job.
-            final Job job;
+            final String jobName;
             final Optional<Result> result;
             try {
-                job = jobs.get(id);
+                jobName = jobs.nameOf(id);
                 result = jobs.resultOf(id);
             } catch (IndexOutOfBoundsException e) {
                 System.out.printf("Invalid index (%d)\n", id);
@@ -138,9 +135,13 @@ enum Command {
             }
 
             if (result.isPresent()) {
-                System.out.printf("Job %d (%s) is %s\n", id, job.jarFile(), result.get());
+                System.out.printf("Job %d (%s) is %s\n", id, jobName, result.get());
             } else {
-                System.out.printf("Job %d (%s) is RUNNING\n", id, job.jarFile());
+                if (jobs.hasAllocated(id)) {
+                    System.out.printf("Job %d (%s) is RUNNING\n", id, jobName);
+                } else {
+                    System.out.printf("Job %d (%s) is UNALLOCATED\n", id, jobName);
+                }
             }
             return true;
         }
@@ -149,26 +150,25 @@ enum Command {
 
     abstract boolean runFor(@NotNull JobManager jobs,
                             @NotNull WorkerPool workers,
-                            @NotNull Scanner params,
-                            @NotNull String prompt);
+                            @NotNull Scanner params);
 
-    static void executeJob(@NotNull JobManager jobs,
-                           @NotNull Job.Files files,
-                           int id,
-                           @NotNull String prompt) {
+    private static void executeJob(@NotNull JobManager jobs,
+                                   @NotNull Job.Files files,
+                                   int id) {
         final Result result;
         try {
             result = jobs.execute(id);
         } catch (WorkerUnavailableException e) {
-            System.out.printf("No Workers available to execute job %d (%s).\n", id, files.jar);
-            System.out.printf(prompt);
-            System.out.flush();
+            System.out.printf(
+                "No Workers available to execute job %d (%s).\n",
+                id, jobs.nameOf(id));
+            System.out.printf(MasterCLI.PROMPT);
             return;
         }
-        System.out.printf("Job %d (%s) terminated with status: %s\noutput file: %s\nlog file: %s\n",
-            id, files.jar, result.name(), files.out, files.log);
+        System.out.printf(
+            "Job %d (%s) terminated with status: %s\noutput file: %s\nlog file: %s\n",
+            id, jobs.nameOf(id), result.name(), files.out, files.log);
         System.out.printf(MasterCLI.PROMPT);
-        System.out.flush();
     }
 
     @NotNull

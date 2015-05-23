@@ -9,8 +9,4 @@ public class WorkerUnavailableException extends Exception {
     WorkerUnavailableException(String message) {
         super(message);
     }
-
-    WorkerUnavailableException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }
