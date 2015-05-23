@@ -1,14 +1,11 @@
 package com.github.nedp.comp90015.proj2.job.worker.master;
 
-
-import javax.resource.spi.UnavailableException;
-
 /**
  * Indicates that there are no Worker available.
  *
  * @author nedp
  */
-public class WorkerUnavailableException extends UnavailableException {
+public class WorkerUnavailableException extends Exception {
     WorkerUnavailableException(String message) {
         super(message);
     }
