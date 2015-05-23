@@ -10,8 +10,6 @@ import java.util.Scanner;
  * @author nedp
  */
 class MasterCLI {
-    static final int EXIT_SUCCESS = 0;
-    static final int EXIT_FAILURE = 1;
     static final String PROMPT = "\nMaster System > ";
 
     public static void main(String[] args) throws IOException {
@@ -21,7 +19,7 @@ class MasterCLI {
 
         // For each input line:
         String lineString;
-        while ((lineString = nextInputLine(PROMPT, console)) != null) {
+        while ((lineString = NextInputLine(console)) != null) {
             final Scanner line = new Scanner(lineString);
             // Skip empty lines.
             if (!line.hasNext()) {
@@ -38,16 +36,16 @@ class MasterCLI {
             }
 
             // Execute the command using the rest of the line.
-            final boolean ok = command.get().runFor(jobs, workers, line, PROMPT);
+            final boolean ok = command.get().runFor(jobs, workers, line);
             if (!ok) {
                 System.out.printf("^~~~ Failed to execute command.\n");
             }
         }
     }
 
-    // Convenience method for reading console intput.
-    private static String nextInputLine(String prompt, BufferedReader console) throws IOException {
-        System.out.print(prompt);
+    // Convenience method for reading console input.
+    private static String NextInputLine(BufferedReader console) throws IOException {
+        System.out.printf(MasterCLI.PROMPT);
         System.out.flush();
         return console.readLine();
     }

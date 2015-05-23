@@ -33,6 +33,7 @@ interface Worker {
      *     <li>FINISHED if the Job finished successfully.</li>
      * </ul>
      */
+    @SuppressWarnings({"SameReturnValue", "UnusedParameters"}) // TODO not implemented
     @NotNull
     Result execute(Job job);
 
@@ -41,8 +42,9 @@ interface Worker {
      * <p/>
      * May request an update but doesn't have to.
      */
+    @SuppressWarnings("SameReturnValue") // TODO not implemented
     @NotNull
-    WorkerStatus status();
+    Status status();
 
     /**
      * Retrieves the last known CPU load of the remote Worker.
@@ -52,6 +54,8 @@ interface Worker {
      * @return the load on a scale where 0.0 = no usage,
      * and 1.0 = nominal full usage.
      */
+    @SuppressWarnings({"SameReturnValue", "unused"})
+    // TODO not implemented, dependents not implemented
     double cpuLoad();
 
     /**
@@ -61,6 +65,8 @@ interface Worker {
      *
      * @return the number of bytes of free memory.
      */
+    @SuppressWarnings({"SameReturnValue", "unused"})
+    // TODO not implemented, dependents not implemented
     long freeMemory();
 
     /**
@@ -71,5 +77,15 @@ interface Worker {
      *
      * @return the identifier as a String.
      */
+    @NotNull
     String identifier();
+
+    /**
+     * Indicates the current status of a Worker.
+     */
+    enum Status {
+        RUNNING,
+        DISCONNECTED,
+        ;
+    }
 }
