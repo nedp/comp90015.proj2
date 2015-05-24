@@ -2,19 +2,18 @@ package com.github.nedp.comp90015.proj2.job.worker.master.command
 
 import spock.lang.Specification
 
+import static com.github.nedp.comp90015.proj2.job.worker.master.command.Command.Type.*
+
 /**
  * Created by nedp on 24/05/15.
  */
 class CommandTest extends Specification {
-    def "RunFor"() {
-        // TODO not sure how to test concurrent things.
-    }
 
-    def "FromWord works correctly"() {
-        expect: FromName(word) == expected
+    def "FromName works correctly"() {
+        expect: FromName(name) == expected
 
         where:
-        word         || expected
+        name         || expected
         "add"        || Optional.of(ADD_WORKER)
         "addw"       || Optional.of(ADD_WORKER)
         "aw"         || Optional.of(ADD_WORKER)

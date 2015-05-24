@@ -28,30 +28,6 @@ class AddCommand implements Command {
         this.port = port;
     }
 
-    /**
-     * Attempts to build an instance of this class from parameters.
-     * <p/>
-     * Required parameters are:
-     * <ol>
-     *     <li>hostname: string specifying the Worker host address</li>
-     *     <li>port: integer specifying the Worker port</li>
-     * </ol>
-     *
-     * @param params  the Scanner providing the parameters.
-     * @return an instance of this class built from the parameters
-     * if possible, otherwise a UsageCommand specifying correct usage.
-     */
-    static Command FromParams(Scanner params) {
-        final String hostname;
-        final int port;
-        try {
-            hostname = params.next();
-            port = params.nextInt();
-        } catch (NoSuchElementException e) {
-            return new UsageCommand(AddCommand.USAGE);
-        }
-        return new AddCommand(hostname, port);
-    }
 
     /**
      * (Attempts to) add a new {@link Worker} to the pool.
@@ -77,6 +53,35 @@ class AddCommand implements Command {
         } else {
             out.printf("Worker (%s) already added.\n", worker.identifier());
             return false;
+        }
+    }
+
+    static class Factory implements CommandFactory {
+        /**
+         * Attempts to build an instance of AddCommand form parameters.
+         * <p/>
+         * Required parameters are:
+         * <ol>
+         *     <li>hostname: string specifying the Worker host address</li>
+         *     <li>port: integer specifying the Worker port</li>
+         * </ol>
+         *
+         * @param params  the Scanner providing the parameters.
+         * @return an instance of AddCommand built from the parameters
+         * if possible, otherwise a UsageCommand specifying correct usage.
+         */
+        @NotNull
+        @Override
+        public Command fromParams(Scanner params) {
+            final String hostname;
+            final int port;
+            try {
+                hostname = params.next();
+                port = params.nextInt();
+            } catch (NoSuchElementException e) {
+                return new UsageCommand(AddCommand.USAGE);
+            }
+            return new AddCommand(hostname, port);
         }
     }
 }

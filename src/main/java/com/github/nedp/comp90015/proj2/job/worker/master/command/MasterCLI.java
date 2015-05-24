@@ -21,10 +21,12 @@ class MasterCLI implements Runnable {
         final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         final WorkerPool workers = new WorkerPool();
         final JobManager jobs = new JobManager(workers);
-        final CommandFactory commandFactory = new CommandFactory();
+        final CommandFactoryProducer commandFactoryProducer =
+            new CommandFactoryProducer(new AddCommand.Factory(), new ListCommand.Factory(),
+                new StatusCommand.Factory(), new SubmitCommand.Factory());
 
         try {
-            new MasterCLI(workers, jobs, commandFactory, PROMPT, in, System.out).run();
+            new MasterCLI(workers, jobs, commandFactoryProducer, PROMPT, in, System.out).run();
         } catch (RuntimeException e) {
             e.printStackTrace();
             System.exit(EXIT_FAILURE);
@@ -38,7 +40,7 @@ class MasterCLI implements Runnable {
     @NotNull
     private final JobManager jobs;
     @NotNull
-    private final CommandFactory commandFactory;
+    private final CommandFactoryProducer factoryProducer;
     @NotNull
     private final String prompt;
     @NotNull
@@ -46,14 +48,14 @@ class MasterCLI implements Runnable {
 
     private MasterCLI(@NotNull WorkerPool workers,
                       @NotNull JobManager jobs,
-                      @NotNull CommandFactory commandFactory,
+                      @NotNull CommandFactoryProducer factoryProducer,
                       @NotNull String prompt,
                       @NotNull BufferedReader in,
                       @NotNull PrintStream out) {
         this.in = in;
         this.workers = workers;
         this.jobs = jobs;
-        this.commandFactory = commandFactory;
+        this.factoryProducer = factoryProducer;
         this.prompt = prompt;
         this.out = out;
     }
@@ -82,7 +84,8 @@ class MasterCLI implements Runnable {
                     this.out.printf("command not recognised: %s\n", commandName);
                     continue;
                 }
-                final Command command = this.commandFactory.fromParams(commandType.get(), line);
+                final Command command =
+                    this.factoryProducer.fromType(commandType.get()).fromParams(line);
 
                 // Execute the command using the rest of the line.
                 final boolean ok = command.runOn(jobs, workers, out);

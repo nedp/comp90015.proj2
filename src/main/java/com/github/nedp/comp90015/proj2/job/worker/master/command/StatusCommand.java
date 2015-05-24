@@ -27,29 +27,6 @@ class StatusCommand implements Command {
     }
 
     /**
-     * Attempts to build an instance of this class from parameters.
-     * <p/>
-     * Required parameters are:
-     * <ol>
-     *     <li>id: integer</li>
-     * </ol>
-     *
-     * @param params  the Scanner providing the parameters.
-     * @return an instance of this class built from the parameters
-     * if possible, otherwise a UsageCommand specifying correct usage.
-     */
-    @NotNull
-    static Command FromParams(Scanner params) {
-        final int id;
-        try {
-            id = params.nextInt();
-        } catch (NoSuchElementException e) {
-            return new UsageCommand(StatusCommand.USAGE);
-        }
-        return new StatusCommand(id);
-    }
-
-    /**
      * Manually reports on the status of the specified Job.
      * <p/>
      * The Job reported on is the one with the id submitted
@@ -87,5 +64,32 @@ class StatusCommand implements Command {
             }
         }
         return true;
+    }
+
+    static class Factory implements CommandFactory  {
+        /**
+         * Attempts to build an instance of StatusCommand from parameters.
+         * <p/>
+         * Required parameters are:
+         * <ol>
+         *     <li>id: integer</li>
+         * </ol>
+         *
+         * @param params  the Scanner providing the parameters.
+         * @return an instance of StatusCommand built from the parameters
+         * if possible, otherwise a UsageCommand specifying correct usage.
+         */
+        @NotNull
+        @Override
+        public Command fromParams(Scanner params) {
+            final int id;
+            try {
+                id = params.nextInt();
+            } catch (NoSuchElementException e) {
+                return new UsageCommand(StatusCommand.USAGE);
+            }
+            return new StatusCommand(id);
+         }
+
     }
 }
