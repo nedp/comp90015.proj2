@@ -133,7 +133,7 @@ class JobManagerTest extends Specification {
     }
 
     def emptyPoolAllocationFails() {
-        1 * pool.allocateAndExecute(job) >> { throw new WorkerUnavailableException("expected") }
+        1 * pool.allocateAndExecute(job) >> { throw new WorkerUnavailableException() }
     }
 
     def resultIsNotPresent() {

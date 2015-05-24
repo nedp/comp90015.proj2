@@ -15,7 +15,7 @@ import java.util.Scanner;
  */
 class MasterCLI implements Runnable {
     private static final String PROMPT = "\nMaster System > ";
-    static final int EXIT_FAILURE = -1;
+    private static final int EXIT_FAILURE = -1;
 
     public static void main(String[] args) throws IOException {
         final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -26,7 +26,7 @@ class MasterCLI implements Runnable {
                 new StatusCommand.Factory(), new SubmitCommand.Factory());
 
         try {
-            new MasterCLI(workers, jobs, commandFactoryProducer, PROMPT, in, System.out).run();
+            new MasterCLI(workers, jobs, commandFactoryProducer, in).run();
         } catch (RuntimeException e) {
             e.printStackTrace();
             System.exit(EXIT_FAILURE);
@@ -49,15 +49,13 @@ class MasterCLI implements Runnable {
     private MasterCLI(@NotNull WorkerPool workers,
                       @NotNull JobManager jobs,
                       @NotNull CommandFactoryProducer factoryProducer,
-                      @NotNull String prompt,
-                      @NotNull BufferedReader in,
-                      @NotNull PrintStream out) {
+                      @NotNull BufferedReader in) {
         this.in = in;
         this.workers = workers;
         this.jobs = jobs;
         this.factoryProducer = factoryProducer;
-        this.prompt = prompt;
-        this.out = out;
+        this.prompt = MasterCLI.PROMPT;
+        this.out = System.out;
     }
 
     /**

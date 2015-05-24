@@ -5,7 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Scanner;
 
 /**
- * Created by nedp on 24/05/15.
+ * Factory interface for creating Commands.
+ *
+ * @author nedp
  */
 public interface CommandFactory {
     /**

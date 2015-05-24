@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author nedp
  */
-public class CommandFactoryProducer {
+class CommandFactoryProducer {
 
     private final CommandFactory addFactory;
     private final CommandFactory listFactory;
