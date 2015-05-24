@@ -83,13 +83,9 @@ enum Command {
             final int memLimit;
             final int timeout;
             try {
-                final File jarFilename = new File(params.next());
-                final File inFilename = new File(params.next());
-                final File outFilename = new File(params.next());
-                final File logFilename = new File(params.next());
-                files = new Job.Files(jarFilename, inFilename, outFilename, logFilename);
-                memLimit = params.nextInt();
-                timeout = params.nextInt();
+                files = GetFiles(params);
+                memLimit = OptionalInt(params, Job.NO_LIMIT);
+                timeout = OptionalInt(params, Job.NO_TIMEOUT);
             } catch (NoSuchElementException e) {
                 System.out.printf(USAGE);
                 return false;
@@ -130,7 +126,7 @@ enum Command {
                 jobName = jobs.nameOf(id);
                 result = jobs.resultOf(id);
             } catch (IndexOutOfBoundsException e) {
-                System.out.printf("Invalid index (%d)\n", id);
+                System.out.printf("No Job is tracked with id %d\n", id);
                 return false;
             }
 
@@ -169,6 +165,23 @@ enum Command {
             "Job %d (%s) terminated with status: %s\noutput file: %s\nlog file: %s\n",
             id, jobs.nameOf(id), result.name(), files.out, files.log);
         System.out.printf(MasterCLI.PROMPT);
+    }
+
+    @NotNull
+    private static Job.Files GetFiles(@NotNull Scanner params) {
+        final File jarFilename = new File(params.next());
+        final File inFilename = new File(params.next());
+        final File outFilename = new File(params.next());
+        final File logFilename = new File(params.next());
+        return new Job.Files(jarFilename, inFilename, outFilename, logFilename);
+    }
+
+    private static int OptionalInt(@NotNull Scanner params, int def) {
+        if (params.hasNext()) {
+            return params.nextInt();
+        } else {
+            return def;
+        }
     }
 
     @NotNull
