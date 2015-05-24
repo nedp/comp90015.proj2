@@ -63,8 +63,7 @@ public class WorkerPool {
         final Optional<Worker> chosenWorker = this.workerFor(job);
 
         // Have the chosen worker execute the job.
-        final Worker worker = chosenWorker.orElseThrow(() ->
-            new WorkerUnavailableException("no suitable Workers present"));
+        final Worker worker = chosenWorker.orElseThrow(WorkerUnavailableException::new);
 
         return worker.execute(job);
     }

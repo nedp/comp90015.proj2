@@ -7,7 +7,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.PrintStream;
 
 /**
- * Created by nedp on 24/05/15.
+ * Command for printing a usage message.
+ *
+ * @author nedp
  */
 class UsageCommand implements Command {
     @NotNull

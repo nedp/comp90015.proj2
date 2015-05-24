@@ -15,16 +15,18 @@ import java.util.Scanner;
  */
 class MasterCLI implements Runnable {
     private static final String PROMPT = "\nMaster System > ";
-    static final int EXIT_FAILURE = -1;
+    private static final int EXIT_FAILURE = -1;
 
     public static void main(String[] args) throws IOException {
         final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         final WorkerPool workers = new WorkerPool();
         final JobManager jobs = new JobManager(workers);
-        final CommandFactory commandFactory = new CommandFactory();
+        final CommandFactoryProducer commandFactoryProducer =
+            new CommandFactoryProducer(new AddCommand.Factory(), new ListCommand.Factory(),
+                new StatusCommand.Factory(), new SubmitCommand.Factory());
 
         try {
-            new MasterCLI(workers, jobs, commandFactory, PROMPT, in, System.out).run();
+            new MasterCLI(workers, jobs, commandFactoryProducer, in).run();
         } catch (RuntimeException e) {
             e.printStackTrace();
             System.exit(EXIT_FAILURE);
@@ -38,7 +40,7 @@ class MasterCLI implements Runnable {
     @NotNull
     private final JobManager jobs;
     @NotNull
-    private final CommandFactory commandFactory;
+    private final CommandFactoryProducer factoryProducer;
     @NotNull
     private final String prompt;
     @NotNull
@@ -46,16 +48,14 @@ class MasterCLI implements Runnable {
 
     private MasterCLI(@NotNull WorkerPool workers,
                       @NotNull JobManager jobs,
-                      @NotNull CommandFactory commandFactory,
-                      @NotNull String prompt,
-                      @NotNull BufferedReader in,
-                      @NotNull PrintStream out) {
+                      @NotNull CommandFactoryProducer factoryProducer,
+                      @NotNull BufferedReader in) {
         this.in = in;
         this.workers = workers;
         this.jobs = jobs;
-        this.commandFactory = commandFactory;
-        this.prompt = prompt;
-        this.out = out;
+        this.factoryProducer = factoryProducer;
+        this.prompt = MasterCLI.PROMPT;
+        this.out = System.out;
     }
 
     /**
@@ -82,7 +82,8 @@ class MasterCLI implements Runnable {
                     this.out.printf("command not recognised: %s\n", commandName);
                     continue;
                 }
-                final Command command = this.commandFactory.fromParams(commandType.get(), line);
+                final Command command =
+                    this.factoryProducer.fromType(commandType.get()).fromParams(line);
 
                 // Execute the command using the rest of the line.
                 final boolean ok = command.runOn(jobs, workers, out);

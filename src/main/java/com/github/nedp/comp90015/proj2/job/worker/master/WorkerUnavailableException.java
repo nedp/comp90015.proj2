@@ -6,7 +6,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
  * @author nedp
  */
 public class WorkerUnavailableException extends Exception {
-    WorkerUnavailableException(String message) {
-        super(message);
+    WorkerUnavailableException() {
+        super("no suitable Workers present");
     }
 }

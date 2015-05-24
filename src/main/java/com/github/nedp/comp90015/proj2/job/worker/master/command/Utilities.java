@@ -12,7 +12,7 @@ import java.util.Scanner;
  *
  * @author nedp
  */
-public interface Utilities {
+interface Utilities {
 
     /**
      * Creates a Files object from the next four parameters.

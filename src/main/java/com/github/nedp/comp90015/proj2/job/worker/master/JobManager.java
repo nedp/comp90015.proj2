@@ -3,7 +3,6 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
 import com.github.nedp.comp90015.proj2.job.Job;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

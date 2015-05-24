@@ -37,40 +37,6 @@ class SubmitCommand implements Command {
     }
 
     /**
-     * Attempts to build an instance of this class from parameters.
-     * <p/>
-     * Required parameters are:
-     * <ol>
-     *     <li>jarFile: string containing path to file</li>
-     *     <li>inFile: string containing path to file</li>
-     *     <li>outFile: string containing path to file</li>
-     *     <li>logFile: string containing path to file</li>
-     * </ol>
-     * Additional optional parameters are:
-     * <ol>
-     *     <li>memoryLimit: integer number of MB</li>
-     *     <li>timeout: integer number of seconds</li>
-     * </ol>
-     *
-     * @param params  the Scanner providing the parameters.
-     * @return an instance of this class built from the parameters
-     * if possible, otherwise a UsageCommand specifying correct usage.
-     */
-    static Command FromParams(Scanner params) {
-        final Job.Files files;
-        final int memoryLimit;
-        final int timeout;
-        try {
-            files = Utilities.GetFiles(params);
-            memoryLimit = Utilities.NextIntOr(params, Job.NO_LIMIT);
-            timeout = Utilities.NextIntOr(params, Job.NO_TIMEOUT);
-        } catch (NoSuchElementException e) {
-            return new UsageCommand(SubmitCommand.USAGE);
-        }
-        return new SubmitCommand(files, memoryLimit, timeout);
-    }
-
-    /**
      * Submits and attempts to run add a new {@link Job}.
      * <p/>
      * A new {@link Thread} will be created for Job execution.
@@ -110,5 +76,45 @@ class SubmitCommand implements Command {
         final Job.Files files = jobs.filesOf(id);
         out.printf("Job %d (%s) terminated with status: %s\noutput file: %s\nlog file: %s\n",
             id, jobs.nameOf(id), result.name(), files.out, files.log);
+    }
+
+    static class Factory implements CommandFactory  {
+        /**
+         * Attempts to build an instance of SubmitCommand from parameters.
+         * <p/>
+         * Required parameters are:
+         * <ol>
+         *     <li>jarFile: string containing path to file</li>
+         *     <li>inFile: string containing path to file</li>
+         *     <li>outFile: string containing path to file</li>
+         *     <li>logFile: string containing path to file</li>
+         * </ol>
+         * Additional optional parameters are:
+         * <ol>
+         *     <li>memoryLimit: integer number of MB</li>
+         *     <li>timeout: integer number of seconds</li>
+         * </ol>
+         *
+         * @param params  the Scanner providing the parameters.
+         * @return an instance of SubmitCommand built from the parameters
+         * if possible, otherwise a UsageCommand specifying correct usage.
+         */
+        @NotNull
+        @Override
+        public Command fromParams(Scanner params) {
+            final Job.Files files;
+            final int memoryLimit;
+            final int timeout;
+            try {
+                files = Utilities.GetFiles(params);
+                memoryLimit = Utilities.NextIntOr(params, Job.NO_LIMIT);
+                timeout = Utilities.NextIntOr(params, Job.NO_TIMEOUT);
+            } catch (NoSuchElementException e) {
+                return new UsageCommand(SubmitCommand.USAGE);
+            }
+            return new SubmitCommand(files, memoryLimit, timeout);
+        }
+
+
     }
 }
