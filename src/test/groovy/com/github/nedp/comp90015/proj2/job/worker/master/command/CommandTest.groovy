@@ -1,8 +1,6 @@
-package com.github.nedp.comp90015.proj2.job.worker.master
+package com.github.nedp.comp90015.proj2.job.worker.master.command
 
 import spock.lang.Specification
-
-import static com.github.nedp.comp90015.proj2.job.worker.master.Command.*
 
 /**
  * Created by nedp on 24/05/15.
@@ -13,7 +11,7 @@ class CommandTest extends Specification {
     }
 
     def "FromWord works correctly"() {
-        expect: FromWord(word) == expected
+        expect: FromName(word) == expected
 
         where:
         word         || expected

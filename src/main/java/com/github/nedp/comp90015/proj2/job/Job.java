@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class Job implements Runnable {
 
-    private static final int NO_LIMIT = -1;
-    private static final int NO_TIMEOUT = -1;
+    public static final int NO_LIMIT = -1;
+    public static final int NO_TIMEOUT = -1;
 
     private static final String JAVA = "java";
     private static final String JAR_FLAG = "-jar";
@@ -154,6 +154,10 @@ public class Job implements Runnable {
 
     /**
      * Retrieves the name of this Job, which is determined by its jar file.
+     * <p/>
+     * A Job's name is a short, but possibly ambiguous identifier.
+     * It should not be used to uniquely identify the Job.
+     *
      * @return a string containing the Job's name.
      */
     @NotNull

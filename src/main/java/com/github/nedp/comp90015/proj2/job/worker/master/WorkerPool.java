@@ -33,7 +33,7 @@ public class WorkerPool {
      * @param initialWorkers  a list of workers which should initially
      *                        be contained in the pool.
      */
-    WorkerPool(@NotNull Collection<Worker> initialWorkers) {
+    public WorkerPool(@NotNull Collection<Worker> initialWorkers) {
         this.workerList = new ArrayList<>(initialWorkers);
         this.workerSet = new HashSet<>(initialWorkers);
     }
@@ -41,7 +41,7 @@ public class WorkerPool {
     /**
      * Creates a WorkerPool with no initial {@link Worker}s.
      */
-    WorkerPool() {
+    public WorkerPool() {
         this.workerList = new ArrayList<>();
         this.workerSet = new HashSet<>();
     }
@@ -112,7 +112,7 @@ public class WorkerPool {
      * @return true if the Worker was added to the pool,
      * and false if the Worker was already present.
      */
-    synchronized boolean add(@NotNull Worker worker) {
+    public synchronized boolean add(@NotNull Worker worker) {
         // Don't allow duplicate workers.
         if (this.workerSet.contains(worker)) {
             return false;
@@ -132,10 +132,10 @@ public class WorkerPool {
      * Changing the returned list will not affect this WorkerPool.
      *
      * @return a new {@link List<Worker>} containing all the workers
-     * known by this WorkerPool.
+     * known by this WorkerPool, in the order they were added.
      */
     @NotNull
-    synchronized List<Worker> workerList() {
+    public synchronized List<Worker> workerList() {
         return new ArrayList<>(this.workerList);
     }
 }

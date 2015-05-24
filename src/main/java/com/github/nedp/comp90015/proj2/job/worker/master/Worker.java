@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author nedp
  */
-interface Worker {
+public interface Worker {
     /**
      * Executes a {@link Job} at the remote Worker.
      * <p/>
