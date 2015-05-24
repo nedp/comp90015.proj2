@@ -20,7 +20,7 @@ import java.util.Optional;
  *
  * @author nedp
  */
-class JobManager {
+public class JobManager {
     @NotNull
     private final List<JobResult> jobResults;
     @NotNull
@@ -33,7 +33,7 @@ class JobManager {
      *
      * @param pool should be ready to allocate Jobs, not null
      */
-    JobManager(@NotNull WorkerPool pool) {
+    public JobManager(@NotNull WorkerPool pool) {
         this.pool = pool;
         this.jobResults = new ArrayList<>();
     }
@@ -90,7 +90,7 @@ class JobManager {
     }
 
     /**
-     * Reports whether the {@link Job} with the specified id has been allocated.
+     * Reports whether the specified {@link Job}.
      * <p/>
      * Not synchronised, read only.
      *
@@ -105,7 +105,9 @@ class JobManager {
     }
 
     /**
-     * Returns the {@link Job} with the specified id.
+     * Returns the name of the specified {@link Job}.
+     * <p/>
+     * Not synchronised, read only.
      *
      * @param id  the integer id of the Job of interest.
      * @return a String containing the name of the Job of interest.
@@ -118,6 +120,22 @@ class JobManager {
         return jobResult.job.name();
     }
 
+    /**
+     * Returns the {@link Job.Files} of the specified {@link Job}.
+     * <p/>
+     * Not synchronised, read only.
+     *
+     * @param id  the integer id of the Job of interest.
+     * @return a Job.Files object containing the Job's files.
+     * @throws IndexOutOfBoundsException if the job is not tracked.
+     */
+    public Job.Files filesOf(int id) {
+        final JobResult jobResult = this.jobResults.get(id);
+        assert(jobResult != null);
+        return jobResult.job.files;
+    }
+
+    // Data structure for linking a Job with its Result.
     private static class JobResult {
         @NotNull private final Job job;
         @NotNull private Optional<Result> result;
