@@ -24,6 +24,13 @@
         <processorPath useClasspath="true" />
         <module name="proj2" />
       </profile>
+      <profile default="false" name="Annotation profile for proj2" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="proj2" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="proj2" target="1.8" />
