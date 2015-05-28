@@ -17,12 +17,12 @@ import java.util.*;
  */
 public class WorkerPool {
     @NotNull
-    private final List<Worker> workerList; // Must be a List for round robin.
+    protected final Set<Worker> workerSet; // Must be a Set to avoid duplicates.
 
     @NotNull
-    private final Set<Worker> workerSet; // Must be a Set to avoid duplicates.
-
+    private final List<Worker> workerList; // Must be a List for round robin.
     private int iWorker = 0; // Current worker for round robin allocation.
+
 
     /**
      * Populates a new WorkerPool with the supplied {@link Worker}s.
@@ -82,7 +82,7 @@ public class WorkerPool {
      */
     @NotNull
     protected synchronized Optional<Worker> workerFor(@NotNull Job job) {
-        final int size = WorkerPool.this.workerSet.size();
+        final int size = this.workerSet.size();
         if (size == 0) {
             return Optional.empty();
         }
@@ -94,7 +94,7 @@ public class WorkerPool {
             if (i == size) {
                 i = 0;
             }
-            // Throw an exception if we tried all workers.
+            // If we tried all workers, there's no worker for the Job.
             if (i == this.iWorker) {
                 return Optional.empty();
             }
