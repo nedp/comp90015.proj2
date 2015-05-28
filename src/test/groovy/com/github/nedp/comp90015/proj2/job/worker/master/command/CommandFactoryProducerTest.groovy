@@ -61,10 +61,6 @@ class CommandFactoryProducerTest extends Specification {
         "bar"        || Optional.empty()
     }
 
-    def factoryProducedFor(Command.Type type) {
-        result = underTest.fromType(type)
-    }
-
     def producedFactoryIs(CommandFactory expected) {
         result == expected
     }
