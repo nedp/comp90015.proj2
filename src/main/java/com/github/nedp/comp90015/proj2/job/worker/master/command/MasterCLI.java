@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 /**
  * Provides a CLI interface for the Master (client) side of the system.
@@ -26,7 +27,7 @@ class MasterCLI implements Runnable {
                 new StatusCommand.Factory(), new SubmitCommand.Factory());
 
         try {
-            new MasterCLI(workers, jobs, commandFactoryProducer, in).run();
+            new MasterCLI(workers, jobs, commandFactoryProducer, in, System.out, PROMPT).run();
         } catch (RuntimeException e) {
             e.printStackTrace();
             System.exit(EXIT_FAILURE);
@@ -49,13 +50,15 @@ class MasterCLI implements Runnable {
     private MasterCLI(@NotNull WorkerPool workers,
                       @NotNull JobManager jobs,
                       @NotNull CommandFactoryProducer factoryProducer,
-                      @NotNull BufferedReader in) {
+                      @NotNull BufferedReader in,
+                      @NotNull PrintStream out,
+                      @NotNull String prompt) {
         this.in = in;
         this.workers = workers;
         this.jobs = jobs;
         this.factoryProducer = factoryProducer;
         this.prompt = MasterCLI.PROMPT;
-        this.out = System.out;
+        this.out = out;
     }
 
     /**
@@ -77,13 +80,12 @@ class MasterCLI implements Runnable {
 
                 // Parse the command from the System.out, reporting bad commands.
                 final String commandName = line.next();
-                final Optional<Command.Type> commandType = Command.Type.FromName(commandName);
-                if (!commandType.isPresent()) {
+                final Optional<CommandFactory> factory = factoryProducer.fromName(commandName);
+                if (!factory.isPresent()) {
                     this.out.printf("command not recognised: %s\n", commandName);
                     continue;
                 }
-                final Command command =
-                    this.factoryProducer.fromType(commandType.get()).fromParams(line);
+                final Command command = factory.get().fromParams(line);
 
                 // Execute the command using the rest of the line.
                 final boolean ok = command.runOn(jobs, workers, out);
