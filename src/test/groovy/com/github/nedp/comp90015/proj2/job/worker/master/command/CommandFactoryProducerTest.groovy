@@ -27,16 +27,38 @@ class CommandFactoryProducerTest extends Specification {
             new CommandFactoryProducer(addFactory, listFactory, submitFactory, statusFactory);
     }
 
-    def "fromType produces the correct factory"() {
-        given: factoryProducedFor type
-        expect: producedFactoryIs expected
+    def "FromName works correctly"() {
+        expect: underTest.fromName(name) == expected
 
         where:
-        type         || expected
-        ADD_WORKER   || addFactory
-        LIST_WORKERS || listFactory
-        SUBMIT_JOB   || submitFactory
-        JOB_STATUS   || statusFactory
+        name         || expected
+        "add"        || Optional.of(addFactory)
+        "addw"       || Optional.of(addFactory)
+        "aw"         || Optional.of(addFactory)
+        "a"          || Optional.of(addFactory)
+        "w"          || Optional.of(addFactory)
+
+        "list"       || Optional.of(listFactory)
+        "ls"         || Optional.of(listFactory)
+        "listw"      || Optional.of(listFactory)
+        "lsw"        || Optional.of(listFactory)
+        "lw"         || Optional.of(listFactory)
+        "l"          || Optional.of(listFactory)
+
+        "submit"     || Optional.of(submitFactory)
+        "job"        || Optional.of(submitFactory)
+        "sjob"       || Optional.of(submitFactory)
+        "j"          || Optional.of(submitFactory)
+
+        "status"     || Optional.of(statusFactory)
+        "jobstatus"  || Optional.of(statusFactory)
+        "stat"       || Optional.of(statusFactory)
+        "jobstat"    || Optional.of(statusFactory)
+        "s"          || Optional.of(statusFactory)
+
+        "foo"        || Optional.empty()
+        "foobar"     || Optional.empty()
+        "bar"        || Optional.empty()
     }
 
     def factoryProducedFor(Command.Type type) {

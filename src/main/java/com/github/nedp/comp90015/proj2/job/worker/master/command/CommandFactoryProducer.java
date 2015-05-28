@@ -2,6 +2,8 @@ package com.github.nedp.comp90015.proj2.job.worker.master.command;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
+
 /**
  * Factory Producer for creating CommandFactories.
  *
@@ -32,26 +34,39 @@ class CommandFactoryProducer {
         this.statusFactory = statusFactory;
     }
 
-    /**
-     * Retrieves the correct {@link CommandFactory} for the {@link Command.Type}.
-     *
-     * @param type  the Command.Type desired for production.
-     * @return the CommandFactory responsible for producing Commands
-     * with the desired Type.
-     */
-    public CommandFactory fromType(Command.Type type) {
-        // Parse params.
-        switch (type) {
-            case ADD_WORKER:
-                return this.addFactory;
-            case LIST_WORKERS:
-                return this.listFactory;
-            case SUBMIT_JOB:
-                return this.submitFactory;
-            case JOB_STATUS:
-                return this.statusFactory;
+    @NotNull
+    Optional<CommandFactory> fromName(@NotNull String word) {
+        switch (word) {
+            case "add":
+            case "addw":
+            case "aw":
+            case "a":
+            case "w":
+                return Optional.of(this.addFactory);
+
+            case "list":
+            case "ls":
+            case "listw":
+            case "lsw":
+            case "lw":
+            case "l":
+                return Optional.of(this.listFactory);
+
+            case "submit":
+            case "job":
+            case "sjob":
+            case "j":
+                return Optional.of(this.submitFactory);
+
+            case "status":
+            case "jobstatus":
+            case "stat":
+            case "jobstat":
+            case "s":
+                return Optional.of(this.statusFactory);
+
             default:
-                throw new RuntimeException("incomplete switch case coverage.");
+                return Optional.empty();
         }
     }
 }

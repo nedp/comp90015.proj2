@@ -33,41 +33,5 @@ interface Command {
         SUBMIT_JOB,
         JOB_STATUS,
         ;
-        @NotNull
-        static Optional<Type> FromName(@NotNull String word) {
-            switch (word) {
-                case "add":
-                case "addw":
-                case "aw":
-                case "a":
-                case "w":
-                    return Optional.of(ADD_WORKER);
-
-                case "list":
-                case "ls":
-                case "listw":
-                case "lsw":
-                case "lw":
-                case "l":
-                    return Optional.of(LIST_WORKERS);
-
-                case "submit":
-                case "job":
-                case "sjob":
-                case "j":
-                    return Optional.of(SUBMIT_JOB);
-
-                case "status":
-                case "jobstatus":
-                case "stat":
-                case "jobstat":
-                case "s":
-                    return Optional.of(JOB_STATUS);
-
-                default:
-                    return Optional.empty();
-            }
-        }
     }
-
 }
