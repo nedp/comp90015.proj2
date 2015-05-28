@@ -22,9 +22,9 @@ class MasterCLI implements Runnable {
         final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         final WorkerPool workers = new WorkerPool();
         final JobManager jobs = new JobManager(workers);
-        final CommandFactoryProducer commandFactoryProducer =
-            new CommandFactoryProducer(new AddCommand.Factory(), new ListCommand.Factory(),
-                new StatusCommand.Factory(), new SubmitCommand.Factory());
+        final CommandFactoryProducer commandFactoryProducer = new CommandFactoryProducer(
+                new AddCommand.Factory(), new ListCommand.Factory(),
+                new SubmitCommand.Factory(), new StatusCommand.Factory());
 
         try {
             new MasterCLI(workers, jobs, commandFactoryProducer, in, System.out, PROMPT).run();
