@@ -89,7 +89,7 @@ public class JobManager {
     }
 
     /**
-     * Reports whether the specified {@link Job}.
+     * Reports whether this has allocated the specified {@link Job}.
      * <p/>
      * Not synchronised, read only.
      *

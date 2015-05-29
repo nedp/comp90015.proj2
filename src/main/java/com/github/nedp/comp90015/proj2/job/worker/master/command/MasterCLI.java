@@ -2,6 +2,8 @@ package com.github.nedp.comp90015.proj2.job.worker.master.command;
 
 import com.github.nedp.comp90015.proj2.job.worker.master.JobManager;
 import com.github.nedp.comp90015.proj2.job.worker.master.WorkerPool;
+import com.github.nedp.comp90015.proj2.job.worker.master.LoadBalancer;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -20,7 +22,7 @@ class MasterCLI implements Runnable {
 
     public static void main(String[] args) throws IOException {
         final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        final WorkerPool workers = new WorkerPool();
+        final WorkerPool workers = new LoadBalancer();
         final JobManager jobs = new JobManager(workers);
         final CommandFactoryProducer commandFactoryProducer = new CommandFactoryProducer(
                 new AddCommand.Factory(), new ListCommand.Factory(),
