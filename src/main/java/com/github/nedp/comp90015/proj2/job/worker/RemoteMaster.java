@@ -27,32 +27,30 @@ public class RemoteMaster implements Runnable{
 		boolean keepRunning = true;
 		// open listening port
 		
-
-		
 		SSLServerSocket serverSocketForJobs;
 		try {
 			serverSocketForJobs = (SSLServerSocket) socketFactory.createServerSocket();
 			serverSocketForJobs.bind(null);
 			
-			
-			
 			PrintWriter outToMaster = new PrintWriter( socket.getOutputStream());
 			outToMaster.println("send jobs to me at this port: "+ serverSocketForJobs.getLocalPort());
+
+			// accept connections and create new 'remote master' for each
+			SSLSocket jobSocket;
+	
+			while(keepRunning ){
+				jobSocket = (SSLSocket) serverSocketForJobs.accept();
+				JobHandlerThread jht = new JobHandlerThread(jobSocket, this);
+			
+				jobThreadList.add(jht);
+				(new Thread(jht)).start();
+		
+			}
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			keepRunning = false;
 			
-		}
-			// accept connections and create new 'remote master' for each
-		SSLSocket jobSocket ;
-	
-		while(keepRunning ){
-			jobSocket = (SSLSocket) serverSocketForJobs.accept();
-			JobHandlerThread jht = new JobHandlerThread(jobSocket, this);
-			
-			jobThreadList.add(jht);
-			(new Thread(jht)).start();
-		
 		}
 			
 		
