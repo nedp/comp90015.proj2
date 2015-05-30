@@ -1,5 +1,6 @@
 package com.github.nedp.comp90015.proj2.job
 
+import org.codehaus.groovy.classgen.DummyClassGenerator
 import spock.lang.Ignore
 
 import java.nio.file.Files
@@ -198,6 +199,12 @@ class JobTest extends Specification {
         7        || true
     }
 
+    def "#name is correct"() {
+        given: Job underTest = new Job(files, Stub(StatusTracker))
+        expect: underTest.name() == files.jar.name
+        where: files << [FILES, BAD_FILES, WORD_COUNT_FILES, USE_MEMORY_FILES, TAKE_TIME_FILES]
+    }
+
     def deleteOutput() {
         try { FILES.out.delete() } catch (_) {}
         try { FILES.log.delete() } catch (_) {}
@@ -207,5 +214,7 @@ class JobTest extends Specification {
         try { WORD_COUNT_LOG.delete() } catch (_) {}
         try { USE_MEMORY_FILES.out.delete() } catch (_) {}
         try { USE_MEMORY_FILES.log.delete() } catch (_) {}
+        try { TAKE_TIME_FILES.out.delete() } catch (_) {}
+        try { TAKE_TIME_FILES.log.delete() } catch (_) {}
     }
 }

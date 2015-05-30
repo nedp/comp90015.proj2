@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
  *
  * @author nedp
  */
-@SuppressWarnings("unused") // TODO Dependents aren't implemented yet.
 public class Job implements Runnable {
 
     public static final int NO_LIMIT = -1;
@@ -28,7 +27,7 @@ public class Job implements Runnable {
     private static final String JAR_FLAG = "-jar";
 
     @NotNull
-    private final Files files;
+    public final Files files;
 
     private final int memoryLimit; // in MB
     private final int timeout; // in seconds
@@ -88,8 +87,6 @@ public class Job implements Runnable {
      * job's output and log files.
      */
     final public void run() {
-        // TODO add timeout.
-
         // Enforce run-once semantics by checking and advancing state.
         this.tracker.start();
 
@@ -115,7 +112,6 @@ public class Job implements Runnable {
         if (this.memoryLimit != NO_LIMIT) {
             pb.command().add(String.format("-Xmx%dM", this.memoryLimit));
         }
-
         // ... -jar job_name.jar ...
         Collections.addAll(pb.command(), JAR_FLAG, this.files.jar.toString());
 
@@ -140,7 +136,7 @@ public class Job implements Runnable {
             }
         } catch (IOException | InterruptedException e) {
             // TODO log this nicely
-            System.out.printf("Job#run:  %s caught:  %s\n", e.getClass(), e.getMessage());
+            System.err.printf("Job#run:  %s caught:  %s\n", e.getClass(), e.getMessage());
 
             return false; // If there was an exception, the Job failed.
         }
@@ -152,44 +148,21 @@ public class Job implements Runnable {
      * @return the status
      */
     @NotNull
-    final public Status currentStatus() {
+    public Status currentStatus() {
         return this.tracker.current();
     }
 
     /**
-     * Retrieves the file used as the JAR for this Job.
-     * @return the JAR's File object.
+     * Retrieves the name of this Job, which is determined by its jar file.
+     * <p/>
+     * A Job's name is a short, but possibly ambiguous identifier.
+     * It should not be used to uniquely identify the Job.
+     *
+     * @return a string containing the Job's name.
      */
     @NotNull
-    final public File jarFile() {
-        return this.files.jar;
-    }
-
-    /**
-     * Retrieves the file used as the input file for this Job.
-     * @return the input File object.
-     */
-    @NotNull
-    final public File inFile() {
-        return this.files.in;
-    }
-
-    /**
-     * Retrieves the file used as the output file for this Job.
-     * @return the output File object.
-     */
-    @NotNull
-    final public File outFile() {
-        return this.files.out;
-    }
-
-    /**
-     * Retrieves the file used to collect stdout and stderr for this Job.
-     * @return the log File object.
-     */
-    @NotNull
-    final public File logFile() {
-        return this.files.log;
+    public String name() {
+        return this.files.jar.getName();
     }
 
     /**
