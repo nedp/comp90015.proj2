@@ -22,9 +22,15 @@ public class RemoteWorker implements Worker {
     private final int jobPort;
     private SSLSocket workerSocket;
     private long freeMemory;
+    private static final String keyDir = "/src/main/resources/assignment2KeyStr";
 
     public RemoteWorker(@NotNull String hostname, int port) throws UnknownHostException, IOException {
-        this.hostname = hostname;
+    	// Set the properties of the certificate
+		System.setProperty("javax.net.ssl.trustStore",System.getProperty("user.dir") + keyDir);
+    	System.setProperty("javax.net.ssl.trustStorePassword","comp90015");
+    	System.out.println(System.getProperty("javax.net.ssl.keyStore"));
+    	
+    	this.hostname = hostname;
         this.port = port;
         SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
         workerSocket = (SSLSocket) factory.createSocket(hostname,port);

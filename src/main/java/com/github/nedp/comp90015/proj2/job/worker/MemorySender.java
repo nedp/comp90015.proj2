@@ -28,7 +28,7 @@ public class MemorySender implements Runnable {
 				// Send the memory status to the master
 				outToMaster.println("Memory:" + workerStatus.getFreeMemory());
 				// Sleep for a moment before sending again
-				Thread.sleep(1000);
+				Thread.sleep(10);
 			}
 		} catch (InterruptedException e) {
 			return;

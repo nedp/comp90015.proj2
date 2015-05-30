@@ -60,6 +60,7 @@ class AddCommand implements Command {
 			}
 		} catch (IOException e) {
 			out.printf("Worker not found.\n");
+			e.printStackTrace();
 		}
 		return false;
     }
