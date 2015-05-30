@@ -1,16 +1,12 @@
 package com.github.nedp.comp90015.proj2.job.worker;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-
-import com.github.nedp.comp90015.proj2.job.*;
 
 
 public class WorkerMain {
@@ -64,42 +60,7 @@ public class WorkerMain {
 			, new StatusTracker()); 
 		
 */
-		Job jobToRun = new Job(
-				new Job.Files("src/test/resources/test_jobs/do_nothing"),
-				new StatusTracker()); 
 		
-		jobToRun.currentStatus();
-		Thread jobThread = new Thread(jobToRun);
-		jobThread.start();
-		
-		boolean failed = false;
-		while (!jobToRun.currentStatus().equals(Status.FINISHED)){
-			Thread.sleep(1000);
-			if(jobToRun.currentStatus().equals(Status.FAILED)){
-				failed = true;
-				break;
-			}
-			
-		}
-		jobThread.join();
-		
-		File result = jobToRun.outFile();
-		if(failed){
-			result = jobToRun.logFile();
-		}
-		
-		FileReader fr = new FileReader(result);
-		BufferedReader br = new BufferedReader(fr);
-		String line = null;
-	
-		while(null !=(line = br.readLine())){
-			System.out.println(line);
-		}
-		
-		br.close();
-		fr.close();
-		
-
 	}
 	
 	protected static boolean masterDisconnected(RemoteMaster r){
