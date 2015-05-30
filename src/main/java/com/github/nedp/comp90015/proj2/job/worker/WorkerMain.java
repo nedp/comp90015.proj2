@@ -47,19 +47,7 @@ public class WorkerMain {
 			
 		}
 		
-		// accept jobs from each master
-		//dummyjob
-		/*specify the job specifically*/
-
-/*
-		Job jobToRun = new Job(new Job.Files(
-				new File("src/test/resources/test_jobs/do_nothing.jar"),
-				new File("src/test/resources/test_jobs/do_nothing.in"), 
-				new File("src/test/resources/test_jobs/do_nothing.out"),
-				new File("src/test/resources/test_jobs/do_nothing.log"))
-			, new StatusTracker()); 
 		
-*/
 		
 	}
 	
