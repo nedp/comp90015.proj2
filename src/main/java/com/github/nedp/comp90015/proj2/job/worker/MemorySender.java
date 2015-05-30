@@ -27,7 +27,6 @@ public class MemorySender implements Runnable {
 			while(true){ //TODO This needs to be based on the status of the master
 				// Send the memory status to the master
 				outToMaster.println("Memory:" + workerStatus.getFreeMemory());
-				System.out.println("Sent:" + workerStatus.getFreeMemory());
 				// Sleep for a moment before sending again
 				Thread.sleep(1000);
 			}

@@ -29,7 +29,6 @@ public class RemoteWorker implements Worker {
     	// Set the properties of the certificate
 		System.setProperty("javax.net.ssl.trustStore",System.getProperty("user.dir") + keyDir);
     	System.setProperty("javax.net.ssl.trustStorePassword","comp90015");
-    	System.out.println(System.getProperty("javax.net.ssl.keyStore"));
     	
     	this.hostname = hostname;
         this.port = port;
@@ -39,7 +38,6 @@ public class RemoteWorker implements Worker {
         // Get the port for the job from the Worker
         BufferedReader input = new BufferedReader(new InputStreamReader(workerSocket.getInputStream()));
         jobPort = Integer.parseInt(input.readLine().split(":")[1]);
-        System.out.println(jobPort);
         
         // Begins the status update thread
         Thread memoryThread = new Thread(new MemoryReceiver(this, workerSocket));
