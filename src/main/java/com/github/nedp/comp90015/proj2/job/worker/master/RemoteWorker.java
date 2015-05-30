@@ -31,7 +31,7 @@ public class RemoteWorker implements Worker {
 
     @Override
     public double cpuLoad() {
-        return 0; // TODO
+        return 0; // TODO NOT NEEDED
     }
 
     @Override
