@@ -21,7 +21,7 @@ public class WorkerMain {
 		int portNumber = defaultPort;
 		
 		for(int i = 0; i +1 < args.length; i++ ){
-			if(args.equals("-p")){
+			if(args[i].equals("-p")){
 				portNumber = Integer.parseInt(args[i+1]);
 				
 			}
@@ -42,7 +42,8 @@ public class WorkerMain {
 				t.start();
 			
 			} catch(Exception e){
-				break;
+				//decide whether to keep running or not
+				keepRunning = false;
 			}
 			
 		}
