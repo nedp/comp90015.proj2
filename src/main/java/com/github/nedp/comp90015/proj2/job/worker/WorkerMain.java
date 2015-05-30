@@ -1,16 +1,12 @@
 package com.github.nedp.comp90015.proj2.job.worker;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-
-import com.github.nedp.comp90015.proj2.job.*;
 
 
 public class WorkerMain {
@@ -25,7 +21,7 @@ public class WorkerMain {
 		int portNumber = defaultPort;
 		
 		for(int i = 0; i +1 < args.length; i++ ){
-			if(args.equals("-p")){
+			if(args[i].equals("-p")){
 				portNumber = Integer.parseInt(args[i+1]);
 				
 			}
@@ -46,60 +42,14 @@ public class WorkerMain {
 				t.start();
 			
 			} catch(Exception e){
-				break;
+				//decide whether to keep running or not
+				keepRunning = false;
 			}
 			
 		}
 		
-		// accept jobs from each master
-		//dummyjob
-		/*specify the job specifically*/
-
-/*
-		Job jobToRun = new Job(new Job.Files(
-				new File("src/test/resources/test_jobs/do_nothing.jar"),
-				new File("src/test/resources/test_jobs/do_nothing.in"), 
-				new File("src/test/resources/test_jobs/do_nothing.out"),
-				new File("src/test/resources/test_jobs/do_nothing.log"))
-			, new StatusTracker()); 
 		
-*/
-		Job jobToRun = new Job(
-				new Job.Files("src/test/resources/test_jobs/do_nothing"),
-				new StatusTracker()); 
 		
-		jobToRun.currentStatus();
-		Thread jobThread = new Thread(jobToRun);
-		jobThread.start();
-		
-		boolean failed = false;
-		while (!jobToRun.currentStatus().equals(Status.FINISHED)){
-			Thread.sleep(1000);
-			if(jobToRun.currentStatus().equals(Status.FAILED)){
-				failed = true;
-				break;
-			}
-			
-		}
-		jobThread.join();
-		
-		File result = jobToRun.outFile();
-		if(failed){
-			result = jobToRun.logFile();
-		}
-		
-		FileReader fr = new FileReader(result);
-		BufferedReader br = new BufferedReader(fr);
-		String line = null;
-	
-		while(null !=(line = br.readLine())){
-			System.out.println(line);
-		}
-		
-		br.close();
-		fr.close();
-		
-
 	}
 	
 	protected static boolean masterDisconnected(RemoteMaster r){
