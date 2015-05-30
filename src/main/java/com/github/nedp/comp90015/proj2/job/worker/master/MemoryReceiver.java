@@ -29,8 +29,8 @@ public class MemoryReceiver implements Runnable {
 		try {
 				input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				while(true){
-					worker.setFreeMemory(Long.parseLong(input.readLine().split(":")[1]));
-					System.out.println(worker.freeMemory());
+					long freeMemory = Long.parseLong(input.readLine().split(":")[1]);
+					worker.setFreeMemory(freeMemory);
 				}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

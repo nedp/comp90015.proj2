@@ -13,8 +13,8 @@ import javax.net.ssl.SSLSocket;
  */
 public class MemorySender implements Runnable {
 	
-	WorkerStatus workerStatus = new WorkerStatus();
-	SSLSocket socket;
+	private WorkerStatus workerStatus = new WorkerStatus();
+	private final SSLSocket socket;
 	
 	public MemorySender(SSLSocket socket){
 		this.socket = socket;
@@ -23,12 +23,12 @@ public class MemorySender implements Runnable {
 	@Override
 	public void run() {
 		try {
-			PrintWriter outToMaster = new PrintWriter( socket.getOutputStream());
+			PrintWriter outToMaster = new PrintWriter( socket.getOutputStream(), true);
 			while(true){ //TODO This needs to be based on the status of the master
 				// Send the memory status to the master
 				outToMaster.println("Memory:" + workerStatus.getFreeMemory());
 				// Sleep for a moment before sending again
-				Thread.sleep(10);
+				Thread.sleep(1000);
 			}
 		} catch (InterruptedException e) {
 			return;

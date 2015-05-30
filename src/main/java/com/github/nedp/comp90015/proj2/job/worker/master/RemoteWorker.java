@@ -25,10 +25,10 @@ public class RemoteWorker implements Worker {
     private static final String keyDir = "/src/main/resources/assignment2KeyStr";
 
     public RemoteWorker(@NotNull String hostname, int port) throws UnknownHostException, IOException {
+    	
     	// Set the properties of the certificate
 		System.setProperty("javax.net.ssl.trustStore",System.getProperty("user.dir") + keyDir);
     	System.setProperty("javax.net.ssl.trustStorePassword","comp90015");
-    	System.out.println(System.getProperty("javax.net.ssl.keyStore"));
     	
     	this.hostname = hostname;
         this.port = port;
@@ -49,6 +49,14 @@ public class RemoteWorker implements Worker {
 	@NotNull
     @Override
     public Result execute(Job job) {
+		SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+		try {
+			SSLSocket jobSocket = (SSLSocket) factory.createSocket(hostname,jobPort);
+			// TODO Send jobs this way. God I'm tired, I'm going to sleep. Good luck.
+		} catch (IOException e) {
+			return Result.DISCONNECTED;
+		}
+		
         return Result.DISCONNECTED; // TODO
     }
 
@@ -65,7 +73,7 @@ public class RemoteWorker implements Worker {
 
     @Override
     public long freeMemory() {
-        return 0; // TODO
+        return freeMemory;
     }
     
     public void setFreeMemory(long freeMemory){
