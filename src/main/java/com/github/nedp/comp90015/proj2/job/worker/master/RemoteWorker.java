@@ -49,6 +49,14 @@ public class RemoteWorker implements Worker {
 	@NotNull
     @Override
     public Result execute(Job job) {
+		SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+		try {
+			SSLSocket jobSocket = (SSLSocket) factory.createSocket(hostname,jobPort);
+			// TODO Send jobs this way. God I'm tired, I'm going to sleep. Good luck.
+		} catch (IOException e) {
+			return Result.DISCONNECTED;
+		}
+		
         return Result.DISCONNECTED; // TODO
     }
 
