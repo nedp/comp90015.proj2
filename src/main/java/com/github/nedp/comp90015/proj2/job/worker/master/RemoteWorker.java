@@ -25,6 +25,7 @@ public class RemoteWorker implements Worker {
     private static final String keyDir = "/src/main/resources/assignment2KeyStr";
 
     public RemoteWorker(@NotNull String hostname, int port) throws UnknownHostException, IOException {
+    	
     	// Set the properties of the certificate
 		System.setProperty("javax.net.ssl.trustStore",System.getProperty("user.dir") + keyDir);
     	System.setProperty("javax.net.ssl.trustStorePassword","comp90015");
@@ -38,6 +39,7 @@ public class RemoteWorker implements Worker {
         // Get the port for the job from the Worker
         BufferedReader input = new BufferedReader(new InputStreamReader(workerSocket.getInputStream()));
         jobPort = Integer.parseInt(input.readLine().split(":")[1]);
+        System.out.println(jobPort);
         
         // Begins the status update thread
         Thread memoryThread = new Thread(new MemoryReceiver(this, workerSocket));
@@ -65,7 +67,7 @@ public class RemoteWorker implements Worker {
 
     @Override
     public long freeMemory() {
-        return 0; // TODO
+        return freeMemory;
     }
     
     public void setFreeMemory(long freeMemory){
