@@ -24,7 +24,7 @@ public class MemorySender implements Runnable {
 	public void run() {
 		try {
 			PrintWriter outToMaster = new PrintWriter( socket.getOutputStream());
-			while(true){
+			while(true){ //TODO This needs to be based on the status of the master
 				// Send the memory status to the master
 				outToMaster.println("Memory:" + workerStatus.getFreeMemory());
 				// Sleep for a moment before sending again
