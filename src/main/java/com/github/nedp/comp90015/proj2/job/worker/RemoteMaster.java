@@ -38,6 +38,7 @@ public class RemoteMaster implements Runnable{
 			// Begin a thread for sending the memory constantly to the Master
 			Thread memoryThread = new Thread(new MemorySender(socket));
 			memoryThread.setDaemon(true);
+			memoryThread.start();
 			
 			// accept connections and create new 'remote master' for each
 			SSLSocket jobSocket;

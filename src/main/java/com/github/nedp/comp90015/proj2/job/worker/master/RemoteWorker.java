@@ -36,8 +36,7 @@ public class RemoteWorker implements Worker {
         // Begins the status update thread
         Thread memoryThread = new Thread(new MemoryReceiver(this, workerSocket));
         memoryThread.setDaemon(true);
-        
-        // This comment was solely created because Git was being a bit of a bastard
+        memoryThread.start();
         
     }
 
