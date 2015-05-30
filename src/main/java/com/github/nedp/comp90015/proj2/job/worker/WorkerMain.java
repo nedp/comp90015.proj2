@@ -12,8 +12,9 @@ import javax.net.ssl.SSLSocket;
 public class WorkerMain {
 
 	
-	static final int defaultPort = 80;
+	static final int defaultPort = 44444;
 	static ArrayList<RemoteMaster> masterList;
+    private static final String keyDir = "/src/main/resources/assignment2KeyStr";
 
 	public static void main(String[] args) throws InterruptedException, IOException {
 		masterList = new ArrayList<RemoteMaster>();
@@ -27,6 +28,9 @@ public class WorkerMain {
 			}
 		}
 		System.out.println("portnum is " + portNumber);
+		
+		System.setProperty("javax.net.ssl.keyStore",System.getProperty("user.dir") + keyDir);
+    	System.setProperty("javax.net.ssl.keyStorePassword","comp90015");
 		
 		// open listening port
 		SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();	
