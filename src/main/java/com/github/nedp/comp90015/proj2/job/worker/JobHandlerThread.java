@@ -43,7 +43,7 @@ public class JobHandlerThread implements Runnable {
 				jobOutput = new BufferedReader(new FileReader(job.files.out));
 				
 				
-			}else if(job.currentStatus().equals(Status.FINISHED)){
+			}else if(job.currentStatus().equals(Status.FAILED)){
 				socketOut.println("Failed");
 				jobOutput = new BufferedReader(new FileReader(job.files.log));
 				
