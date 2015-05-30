@@ -34,12 +34,11 @@ public class RemoteMaster implements Runnable{
 			
 			PrintWriter outToMaster = new PrintWriter( socket.getOutputStream());
 			outToMaster.println("send jobs to me at this port: "+ serverSocketForJobs.getLocalPort());
-	
+
 			// Begin a thread for sending the memory constantly to the Master
 			Thread memoryThread = new Thread(new MemorySender(socket));
 			memoryThread.setDaemon(true);
 			memoryThread.start();
-			
 			// accept connections and create new 'remote master' for each
 			SSLSocket jobSocket;
 	
