@@ -101,7 +101,7 @@ public class JobHandlerThread implements Runnable {
 			System.out.printf("Couldn't read output back to the master: %s\n", e.getMessage());
 		}
 		
-		/*
+		
 		File parentDir = job.files.jar.getParentFile();
 		job.files.jar.delete();
 		job.files.in.delete();
@@ -121,6 +121,6 @@ public class JobHandlerThread implements Runnable {
 			e.printStackTrace();
 		}
 		 
-	*/
+	
 	}
 }
