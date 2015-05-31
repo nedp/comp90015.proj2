@@ -2,6 +2,7 @@ package com.github.nedp.comp90015.proj2.job.worker;
 
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.Socket;
 
 import javax.net.ssl.SSLServerSocket;
@@ -33,7 +34,14 @@ public class WorkerMain {
 		
 		// open listening port
 		SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-		SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(portNumber);
+		SSLServerSocket ss = null;
+		try{
+			ss = (SSLServerSocket) ssf.createServerSocket(portNumber);
+		}catch(BindException e){
+			System.out.println("cannot bind to port " + portNumber );
+			e.printStackTrace();
+			return;
+		}
 		// accept connections and create new 'remote master' for each
 		while(keepRunning){
 			try{

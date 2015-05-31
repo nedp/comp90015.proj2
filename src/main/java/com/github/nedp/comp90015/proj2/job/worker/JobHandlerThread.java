@@ -29,15 +29,24 @@ public class JobHandlerThread implements Runnable {
 			System.out.printf("could not get streamReader on socket: %s\n", e1.getMessage());
 			return;
 		}
-		
-		this.job = Job.fromJSON(socketIn);
+		String JSONStringJob = "";
+		try {
+			JSONStringJob = socketIn.readLine();
+		} catch (IOException e1) {
+			System.out.println("IO Error reading from job socket");
+			e1.printStackTrace();
+		}
+		this.job = Job.fromJSON(JSONStringJob);
 		
 		if(job == null){
 			
 			//TODO check if this is the best way to do this...
 			System.out.println("Job received but it could not be parsed");
 			try {
-				new PrintWriter(socket.getOutputStream()).println(Job.PARSE_ERROR);
+				PrintWriter pw = new PrintWriter(socket.getOutputStream());
+				pw.println(Job.PARSE_ERROR);
+				pw.close();
+				
 			} catch (IOException e) {
 				
 				e.printStackTrace();
@@ -62,12 +71,12 @@ public class JobHandlerThread implements Runnable {
 		try {
 			switch (job.currentStatus()) {
 				case FINISHED:
-					socketOut.println(Result.FINISHED);
+					socketOut.println("FINISHED");
 					jobOutput = new BufferedReader(new FileReader(job.files.out));
 					break;
 
 				case FAILED:
-					socketOut.println(Result.FAILED);
+					socketOut.println("FAILED");
 					jobOutput = new BufferedReader(new FileReader(job.files.log));
 					
 					break;
@@ -92,7 +101,7 @@ public class JobHandlerThread implements Runnable {
 			System.out.printf("Couldn't read output back to the master: %s\n", e.getMessage());
 		}
 		
-		
+		/*
 		File parentDir = job.files.jar.getParentFile();
 		job.files.jar.delete();
 		job.files.in.delete();
@@ -111,7 +120,7 @@ public class JobHandlerThread implements Runnable {
 			System.out.println("couldn't close sockets & streams");
 			e.printStackTrace();
 		}
-		
-	
+		 
+	*/
 	}
 }

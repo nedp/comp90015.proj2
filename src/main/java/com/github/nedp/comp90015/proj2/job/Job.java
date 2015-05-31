@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -212,21 +213,21 @@ public class Job implements Runnable {
         }
     }
 
-    public static Job fromJSON(BufferedReader input){
+    public static Job fromJSON(String input){
 		JSONParser parser = new JSONParser();
 		JSONObject obj = new JSONObject();
 		
 			try {
 				obj = (JSONObject) parser.parse(input);
 				
-			} catch (IOException | ParseException e) {
+			} catch ( ParseException e) {
 				System.out.printf("couldn't parse the JSON string: %s\n", e.getMessage());
 				
 				return null;
 			}
-			
-			int memoryLimit = (int) obj.get("MemoryLimit");
-			int timeout = (int) obj.get("Timeout");
+			System.out.println("JSON successfully parsed");
+			int memoryLimit = ((Long) obj.get("MemoryLimit")).intValue();
+			int timeout = ((Long) obj.get("Timeout")).intValue();
 			
 			String basename = (String) obj.get("Name");
 			basename = basename.substring(0, basename.lastIndexOf((int)'.'));
@@ -246,41 +247,41 @@ public class Job implements Runnable {
 				System.out.printf("couldn't create the new directory: %s\n", dir.getName());
 				return null;
 			}
+			Base64.Decoder decoder = Base64.getDecoder();
 			
 			//write all the files to Disk
-			Job.Files jobFiles = new Job.Files(dir.getName()+ File.pathSeparator + basename);
-			BufferedWriter output;
+			Job.Files jobFiles = new Job.Files(dir.getName()+ File.separator + basename);
+			
 			try{
 				
 				jobFiles.jar.createNewFile();
-				output = new BufferedWriter(new OutputStreamWriter( 
-						new FileOutputStream(jobFiles.jar), 
-						StandardCharsets.UTF_8 ));
 				
-				output.write((String) obj.get("JarFile"));
-				output.close();
+				String jarFileString = (String) obj.get("JarFile");
+				
+				java.nio.file.Files.write(jobFiles.jar.toPath(),
+						decoder.decode(jarFileString));
+				
+				
 			}catch(IOException e){
 				System.out.printf("couldn't write to new jar file: %s\n",e.getMessage());
 				return null;
 			}try{
 				
 				jobFiles.in.createNewFile();
-				output = new BufferedWriter(new OutputStreamWriter( 
-						new FileOutputStream(jobFiles.in), 
-						StandardCharsets.UTF_8 ));
-				output.write((String) obj.get("InFile"));
-				output.close();
+				String inFileString = (String) obj.get("InFile");
+				
+				java.nio.file.Files.write(jobFiles.in.toPath(),
+						decoder.decode(inFileString));
 			}catch(IOException e){
 				System.out.printf("couldn't write to new input file: %s\n",e.getMessage());
 				return null;
 			}try{
 				
 				jobFiles.out.createNewFile();
-				output = new BufferedWriter(new OutputStreamWriter( 
-						new FileOutputStream(jobFiles.out), 
-						StandardCharsets.UTF_8 ));
-				output.write((String) obj.get("OutFile"));
-				output.close();
+				String outFileString = (String) obj.get("OutFile");
+				
+				java.nio.file.Files.write(jobFiles.out.toPath(),
+						decoder.decode(outFileString));
 				
 			}catch(IOException e){
 				System.out.printf("couldn't write to new output file: %s\n",e.getMessage());
@@ -288,11 +289,10 @@ public class Job implements Runnable {
 			}try{
 				
 				jobFiles.log.createNewFile();
-				output = new BufferedWriter(new OutputStreamWriter( 
-						new FileOutputStream(jobFiles.log), 
-						StandardCharsets.UTF_8 ));
-				output.write((String) obj.get("LogFile"));
-				output.close();
+				String logFileString = (String) obj.get("LogFile");
+				
+				java.nio.file.Files.write(jobFiles.log.toPath(),
+						decoder.decode(logFileString));
 			
 			}catch(IOException e){
 				System.out.printf("couldn't write to new log file: %s\n",e.getMessage());
@@ -315,10 +315,11 @@ public class Job implements Runnable {
 		obj.put("MemoryLimit", this.memoryLimit);
 		obj.put("Timeout", this.timeout);
 
+		Base64.Encoder b64encoder = java.util.Base64.getEncoder();
 		//write the jar file
 		String text = "";
 		try {
-			text = new String(java.nio.file.Files.readAllBytes( files.jar.toPath()), StandardCharsets.UTF_8);
+			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.jar.toPath()));
 		} catch (IOException e) {
 			System.out.println("couldn't write jar file to JSON");
 			e.printStackTrace();
@@ -330,7 +331,8 @@ public class Job implements Runnable {
 		// the in file
 		text = "";
 		try {
-			text = new String(java.nio.file.Files.readAllBytes( files.in.toPath()), StandardCharsets.UTF_8);
+			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.in.toPath()));
+			
 		} catch (IOException e) {
 			System.out.println("couldn't write input file to JSON");
 			e.printStackTrace();
@@ -341,7 +343,7 @@ public class Job implements Runnable {
 		//the out file
 		text = "";
 		try {
-			text = new String(java.nio.file.Files.readAllBytes( files.out.toPath()), StandardCharsets.UTF_8);
+			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.out.toPath()));
 		} catch (IOException e) {
 			System.out.println("couldn't write output file to JSON");
 			e.printStackTrace();
@@ -353,7 +355,7 @@ public class Job implements Runnable {
 		
 		text = "";
 		try {
-			text = new String(java.nio.file.Files.readAllBytes( files.log.toPath()), StandardCharsets.UTF_8);
+			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.log.toPath()));
 		} catch (IOException e) {
 			System.out.println("couldn't write log file to JSON");
 			e.printStackTrace();
