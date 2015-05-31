@@ -1,1 +1,1 @@
-java -jar worker.jar
+java -jar worker.jar $1 $2
