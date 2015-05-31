@@ -14,6 +14,7 @@ import java.util.Scanner;
  * @author nedp
  */
 class ListCommand implements Command {
+    private static final long ONE_MILLION = 1000000;
 
     private ListCommand() {
     }
@@ -23,9 +24,10 @@ class ListCommand implements Command {
                          @NotNull WorkerPool workers,
                          @NotNull PrintStream out) {
         // Identify and report the status of each worker.
-        out.printf("ID - Hostname:Port is Status\n");
+        out.printf("Known worker statuses:\n");
         for (Worker worker : workers.workerList()) {
-            out.printf("%s is %s\n", worker.identifier(), worker.status().name());
+            out.printf("\t%s is %s with %dMB of free memory\n",
+                worker.identifier(), worker.status().name(), worker.freeMemory()/ONE_MILLION);
         }
         return true;
     }

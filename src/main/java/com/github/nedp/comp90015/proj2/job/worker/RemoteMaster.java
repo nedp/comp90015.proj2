@@ -4,69 +4,70 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
+import javax.net.ServerSocketFactory;
 
 public class RemoteMaster implements Runnable{
 
 	protected ArrayList<JobHandlerThread> jobThreadList;
-	private SSLSocket socket;
-	private SSLServerSocketFactory socketFactory;
-	private static final String keyDir = "/src/main/resources/assignment2KeyStr";
-	
-	public RemoteMaster(SSLSocket s, SSLServerSocketFactory ssf) {
+	private Socket socket;
+	private ServerSocketFactory socketFactory;
+
+	public RemoteMaster(Socket s, ServerSocketFactory ssf) {
 		socket = s;
 		socketFactory = ssf;
-		jobThreadList = new ArrayList<JobHandlerThread>();
-		
-		
+		jobThreadList = new ArrayList<>();
 	}
 
 	@Override
 	public void run() {
-		boolean keepRunning = true;
-		System.setProperty("javax.net.ssl.keyStore",System.getProperty("user.dir") + keyDir);
-    	System.setProperty("javax.net.ssl.keyStorePassword","comp90015");
-		
 		// open listening port
-		
-		SSLServerSocket serverSocketForJobs;
+		final ServerSocket serverSocketForJobs;
+		final PrintWriter outToMaster;
 		try {
-			serverSocketForJobs = (SSLServerSocket) socketFactory.createServerSocket();
-			serverSocketForJobs.bind(null);
-			
-			PrintWriter outToMaster = new PrintWriter(socket.getOutputStream(), true);
-			outToMaster.println("send jobs to me at this port:"+ serverSocketForJobs.getLocalPort());
-
-			// Begin a thread for sending the memory constantly to the Master
-			Thread memoryThread = new Thread(new MemorySender(socket));
-			memoryThread.setDaemon(true);
-			memoryThread.start();
-			// accept connections and create new 'remote master' for each
-			SSLSocket jobSocket;
-	
-			while(keepRunning ){
-				jobSocket = (SSLSocket) serverSocketForJobs.accept();
-				JobHandlerThread jht = new JobHandlerThread(jobSocket, this);
-			
-				jobThreadList.add(jht);
-				(new Thread(jht)).start();
-		
-			}
-			
+			outToMaster = new PrintWriter(socket.getOutputStream(), true);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			keepRunning = false;
-			
+			System.out.printf("couldn't access stream to master: %s\n", e.getMessage());
+			return;
 		}
-			
-		
-		
-		
+		try {
+			serverSocketForJobs = socketFactory.createServerSocket();
+			serverSocketForJobs.bind(null);
+			System.out.printf("OPENED port %d - listening for jobs from %s:%d\n",
+				serverSocketForJobs.getLocalPort(), socket.getInetAddress(), socket.getPort());
+		} catch (IOException e) {
+			System.out.printf("couldn't create job server socket: %s\n", e.getMessage());
+			return;
+		}
+		outToMaster.println("send jobs at this port:" + serverSocketForJobs.getLocalPort());
+
+		// Begin a thread for sending the memory constantly to the Master
+		final MemorySender sender = new MemorySender(socket, serverSocketForJobs);
+		Thread memoryThread = new Thread(sender);
+		memoryThread.setDaemon(true);
+		memoryThread.start();
+
+		// accept connections and create new job handler for each
+		while (sender.isConnected()) {
+			final Socket jobSocket;
+			try {
+				jobSocket = serverSocketForJobs.accept();
+			} catch (IOException e) {
+				System.out.printf("couldn't receive the next job in port %d: %s\n",
+					serverSocketForJobs.getLocalPort(), e.getMessage());
+				break;
+			}
+			JobHandlerThread jht = new JobHandlerThread(jobSocket, this);
+
+			jobThreadList.add(jht);
+			(new Thread(jht)).start();
+		}
+
+		sender.disconnect();
 	}
+
 	/*** in case you want to check if the same address is connecting somehow
 	 * 
 	 * @return the inet address of the connected Master
