@@ -5,13 +5,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -214,157 +209,151 @@ public class Job implements Runnable {
     }
 
     public static Job fromJSON(String input){
-		JSONParser parser = new JSONParser();
-		JSONObject obj = new JSONObject();
-		
-			try {
-				obj = (JSONObject) parser.parse(input);
-				
-			} catch ( ParseException e) {
-				System.out.printf("couldn't parse the JSON string: %s\n", e.getMessage());
-				
-				return null;
-			}
-			System.out.println("JSON successfully parsed");
-			int memoryLimit = ((Long) obj.get("MemoryLimit")).intValue();
-			int timeout = ((Long) obj.get("Timeout")).intValue();
-			
-			String basename = (String) obj.get("Name");
-			basename = basename.substring(0, basename.lastIndexOf((int)'.'));
-			
-			File dir = new File(basename);
-			if(dir.exists()){
-				int i = 0;
-				while(dir.exists()){
-					i++;
-					dir = new File(basename + i);
-					
-				}
-				basename = basename + i;
-			}
-			
-			if(!dir.mkdir()){
-				System.out.printf("couldn't create the new directory: %s\n", dir.getName());
-				return null;
-			}
-			Base64.Decoder decoder = Base64.getDecoder();
-			
-			//write all the files to Disk
-			Job.Files jobFiles = new Job.Files(dir.getName()+ File.separator + basename);
-			
-			try{
-				
-				jobFiles.jar.createNewFile();
-				
-				String jarFileString = (String) obj.get("JarFile");
-				
-				java.nio.file.Files.write(jobFiles.jar.toPath(),
-						decoder.decode(jarFileString));
-				
-				
-			}catch(IOException e){
-				System.out.printf("couldn't write to new jar file: %s\n",e.getMessage());
-				return null;
-			}try{
-				
-				jobFiles.in.createNewFile();
-				String inFileString = (String) obj.get("InFile");
-				
-				java.nio.file.Files.write(jobFiles.in.toPath(),
-						decoder.decode(inFileString));
-			}catch(IOException e){
-				System.out.printf("couldn't write to new input file: %s\n",e.getMessage());
-				return null;
-			}try{
-				
-				jobFiles.out.createNewFile();
-				String outFileString = (String) obj.get("OutFile");
-				
-				java.nio.file.Files.write(jobFiles.out.toPath(),
-						decoder.decode(outFileString));
-				
-			}catch(IOException e){
-				System.out.printf("couldn't write to new output file: %s\n",e.getMessage());
-				return null;
-			}try{
-				
-				jobFiles.log.createNewFile();
-				String logFileString = (String) obj.get("LogFile");
-				
-				java.nio.file.Files.write(jobFiles.log.toPath(),
-						decoder.decode(logFileString));
-			
-			}catch(IOException e){
-				System.out.printf("couldn't write to new log file: %s\n",e.getMessage());
-				return null;
-			}
-			
-			
-		return new Job(jobFiles, new StatusTracker(), memoryLimit, timeout );
-	}
+        JSONParser parser = new JSONParser();
+        JSONObject obj = new JSONObject();
+
+            try {
+                obj = (JSONObject) parser.parse(input);
+
+            } catch ( ParseException e) {
+                System.out.printf("couldn't parse the JSON string: %s\n", e.getMessage());
+
+                return null;
+            }
+            System.out.println("JSON successfully parsed");
+            int memoryLimit = ((Long) obj.get("MemoryLimit")).intValue();
+            int timeout = ((Long) obj.get("Timeout")).intValue();
+
+            String basename = (String) obj.get("Name");
+            basename = basename.substring(0, basename.lastIndexOf((int)'.'));
+
+            File dir = new File(basename);
+            if(dir.exists()){
+                int i = 0;
+                while(dir.exists()){
+                    i++;
+                    dir = new File(basename + i);
+
+                }
+                basename = basename + i;
+            }
+
+            if(!dir.mkdir()){
+                System.out.printf("couldn't create the new directory: %s\n", dir.getName());
+                return null;
+            }
+            Base64.Decoder decoder = Base64.getDecoder();
+
+            //write all the files to Disk
+            Job.Files jobFiles = new Job.Files(dir.getName()+ File.separator + basename);
+
+            try{
+
+                jobFiles.jar.createNewFile();
+
+                String jarFileString = (String) obj.get("JarFile");
+
+                java.nio.file.Files.write(jobFiles.jar.toPath(),
+                        decoder.decode(jarFileString));
+
+
+            }catch(IOException e){
+                System.out.printf("couldn't write to new jar file: %s\n",e.getMessage());
+                return null;
+            }try{
+
+                jobFiles.in.createNewFile();
+                String inFileString = (String) obj.get("InFile");
+
+                java.nio.file.Files.write(jobFiles.in.toPath(),
+                        decoder.decode(inFileString));
+            }catch(IOException e){
+                System.out.printf("couldn't write to new input file: %s\n",e.getMessage());
+                return null;
+            }try{
+
+                jobFiles.out.createNewFile();
+                String outFileString = (String) obj.get("OutFile");
+
+                java.nio.file.Files.write(jobFiles.out.toPath(),
+                        decoder.decode(outFileString));
+
+            }catch(IOException e){
+                System.out.printf("couldn't write to new output file: %s\n",e.getMessage());
+                return null;
+            }try{
+
+                jobFiles.log.createNewFile();
+                String logFileString = (String) obj.get("LogFile");
+
+                java.nio.file.Files.write(jobFiles.log.toPath(),
+                        decoder.decode(logFileString));
+
+            }catch(IOException e){
+                System.out.printf("couldn't write to new log file: %s\n",e.getMessage());
+                return null;
+            }
+
+
+        return new Job(jobFiles, new StatusTracker(), memoryLimit, timeout );
+    }
     /**
      * 
      * @param job
      * @return null if error but otherwise a JSONstring that can be sent over the network
      */
     @SuppressWarnings("unchecked")
-	public  String toJSON(){
-		JSONObject obj = new JSONObject();
-		obj.put("Type", "Job");
-		obj.put("Name", this.name());
-		obj.put("MemoryLimit", this.memoryLimit);
-		obj.put("Timeout", this.timeout);
+    public  String toJSON(){
+        JSONObject obj = new JSONObject();
+        obj.put("Type", "Job");
+        obj.put("Name", this.name());
+        obj.put("MemoryLimit", this.memoryLimit);
+        obj.put("Timeout", this.timeout);
 
-		Base64.Encoder b64encoder = java.util.Base64.getEncoder();
-		//write the jar file
-		String text = "";
-		try {
-			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.jar.toPath()));
-		} catch (IOException e) {
-			System.out.println("couldn't write jar file to JSON");
-			e.printStackTrace();
-			return null;
-		}
-		obj.put("JarFile", text);
-		
-		
-		// the in file
-		text = "";
-		try {
-			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.in.toPath()));
-			
-		} catch (IOException e) {
-			System.out.println("couldn't write input file to JSON");
-			e.printStackTrace();
-			return null;
-		}
-		obj.put("InFile", text);
-		
-		//the out file
-		text = "";
-		try {
-			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.out.toPath()));
-		} catch (IOException e) {
-			System.out.println("couldn't write output file to JSON");
-			e.printStackTrace();
-			return null;
-		}
-		obj.put("OutFile", text);
-		
-		// the log file
-		
-		text = "";
-		try {
-			text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.log.toPath()));
-		} catch (IOException e) {
-			System.out.println("couldn't write log file to JSON");
-			e.printStackTrace();
-			return null;
-		}
-		obj.put("LogFile", text);
-		
-		
-		
-		return obj.toJSONString();
-	}
+        Base64.Encoder b64encoder = java.util.Base64.getEncoder();
+        //write the jar file
+        String text;
+        try {
+            text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.jar.toPath()));
+        } catch (IOException e) {
+            System.out.println("couldn't write jar file to JSON");
+            e.printStackTrace();
+            return null;
+        }
+        obj.put("JarFile", text);
+
+
+        // the in file
+        try {
+            text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.in.toPath()));
+
+        } catch (IOException e) {
+            System.out.println("couldn't write input file to JSON");
+            e.printStackTrace();
+            return null;
+        }
+        obj.put("InFile", text);
+
+        //the out file
+        try {
+            text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.out.toPath()));
+        } catch (IOException e) {
+            System.out.println("couldn't write output file to JSON");
+            e.printStackTrace();
+            return null;
+        }
+        obj.put("OutFile", text);
+
+        // the log file
+        try {
+            text = b64encoder.encodeToString(java.nio.file.Files.readAllBytes( files.log.toPath()));
+        } catch (IOException e) {
+            System.out.println("couldn't write log file to JSON");
+            e.printStackTrace();
+            return null;
+        }
+        obj.put("LogFile", text);
+
+        return obj.toJSONString();
+    }
 }
