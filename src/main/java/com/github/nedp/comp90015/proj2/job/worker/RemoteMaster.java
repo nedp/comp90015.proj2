@@ -59,6 +59,7 @@ public class RemoteMaster implements Runnable{
 					serverSocketForJobs.getLocalPort(), e.getMessage());
 				break;
 			}
+			System.out.println("starting new job from "+ jobSocket.getInetAddress());
 			JobHandlerThread jht = new JobHandlerThread(jobSocket, this);
 
 			jobThreadList.add(jht);

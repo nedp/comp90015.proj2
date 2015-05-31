@@ -67,17 +67,26 @@ public class RemoteWorker implements Worker {
         try {
             final Socket jobSocket = factory.createSocket(hostname, jobPort);
             PrintWriter jobOut = new PrintWriter(jobSocket.getOutputStream());
-            jobOut.println(job.toJSON());
-            jobOut.close();
+            String JSONJobString = job.toJSON();
+            if(null== JSONJobString){
+            	System.out.println("Error Turning Job into JSON");
+            	return Result.FAILED;
+            }
+            jobOut.println(JSONJobString);
+            jobOut.flush();
+            
+            
+            ;
             
             BufferedReader jobIn = new BufferedReader(new InputStreamReader(jobSocket.getInputStream()));
             String resultType = jobIn.readLine();
+            System.out.println("returned string was " + resultType);
             if(resultType.equals(Job.PARSE_ERROR)){
-            	jobSocket.close();
+            	//jobSocket.close();
             	System.out.println("There was an Error in parsing the job via JSON");
             	return Result.FAILED;
             	
-            } else if(resultType.equals(Result.FAILED)){
+            } else if(resultType.equals("FAILED")){
             	if(!job.files.log.exists()){
             		job.files.log.createNewFile();
             	}
@@ -92,7 +101,7 @@ public class RemoteWorker implements Worker {
             	jobSocket.close();
             	return Result.FAILED;
             	
-            } else if(resultType.equals(Result.FINISHED)){
+            } else if(resultType.equals("FINISHED")){
             	if(!job.files.out.exists()){
             		job.files.out.createNewFile();
             	}
@@ -104,15 +113,16 @@ public class RemoteWorker implements Worker {
             		pw.println(line);
             	}
             	pw.close();
-            	jobSocket.close();
+            	//jobSocket.close();
             	return Result.FINISHED;
             }
             
             
         } catch (IOException e) {
+        	System.out.println("IO exception");
+        	e.printStackTrace();
             return Result.DISCONNECTED;
         }
-        
         
         return Result.DISCONNECTED; // TODO
     }
