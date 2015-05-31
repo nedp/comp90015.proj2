@@ -13,7 +13,6 @@ public class JobHandlerThread implements Runnable {
 		this.socket = s;
 	}
 
-	@SuppressWarnings("unused")
 	@Override
 	public void run() {
 		// Establish the socket streams.

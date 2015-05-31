@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import javax.net.ssl.SSLSocket;
 
 /**
  * Sends the free memory of the Worker to the Master
