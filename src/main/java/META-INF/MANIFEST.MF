@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: com.github.nedp.comp90015.proj2.job.worker.master.command.
+ MasterCLI
+
