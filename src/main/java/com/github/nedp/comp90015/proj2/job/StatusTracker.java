@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author nedp
  */
-@SuppressWarnings("WeakerAccess") // TODO Dependents aren't implemented yet.
 public class StatusTracker {
     private Status status = Status.WAITING;
 

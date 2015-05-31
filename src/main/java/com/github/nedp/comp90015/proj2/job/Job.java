@@ -174,7 +174,6 @@ public class Job implements Runnable {
     /**
      * A record to store the files associated with a {@link Job}.
      */
-    @SuppressWarnings("unused")
     public static final class Files {
         @NotNull public final File jar;
         @NotNull public final File in;
