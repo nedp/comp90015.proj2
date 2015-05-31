@@ -33,7 +33,6 @@ public interface Worker {
      *     <li>FINISHED if the Job finished successfully.</li>
      * </ul>
      */
-    @SuppressWarnings({"SameReturnValue", "UnusedParameters"}) // TODO not implemented
     @NotNull
     Result execute(Job job);
 
@@ -49,7 +48,6 @@ public interface Worker {
      * <p/>
      * May request an update but doesn't have to.
      */
-    @SuppressWarnings("SameReturnValue") // TODO not implemented
     @NotNull
     Status status();
 

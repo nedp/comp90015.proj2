@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.Socket;
 
 import com.github.nedp.comp90015.proj2.job.*;
-import com.github.nedp.comp90015.proj2.job.worker.master.Result;
 
 public class JobHandlerThread implements Runnable {
 
@@ -17,7 +16,6 @@ public class JobHandlerThread implements Runnable {
 		this.socket = s;
 	}
 
-	@SuppressWarnings("unused")
 	@Override
 	public void run() {
 		

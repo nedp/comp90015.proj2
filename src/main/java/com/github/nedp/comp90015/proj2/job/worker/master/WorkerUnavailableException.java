@@ -6,7 +6,12 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
  * @author nedp
  */
 public class WorkerUnavailableException extends Exception {
-    WorkerUnavailableException() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2846743255103066280L;
+
+	WorkerUnavailableException() {
         super("no suitable Workers present");
     }
 }

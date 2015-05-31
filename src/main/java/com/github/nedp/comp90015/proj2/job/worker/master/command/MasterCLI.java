@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.stream.Stream;
 
 /**
  * Provides a CLI interface for the Master (client) side of the system.
