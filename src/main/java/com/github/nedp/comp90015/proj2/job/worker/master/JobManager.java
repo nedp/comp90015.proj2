@@ -154,9 +154,9 @@ public class JobManager {
             if (this.hasBeenAllocated) {
                 throw new IllegalStateException("tried to allocate a job twice");
             }
+            this.hasBeenAllocated = true;
             final Result result = pool.allocateAndExecute(this.job);
             this.result = Optional.of(result);
-            this.hasBeenAllocated = true;
             return result;
         }
     }
