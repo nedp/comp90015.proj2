@@ -20,16 +20,32 @@ public class JobHandlerThread implements Runnable {
 	@SuppressWarnings("unused")
 	@Override
 	public void run() {
-		//TODO this is just a stub, so the details will need to be done
-		//socket is already running
-		//recv job 
-		// unmarshall the files 
-		// write the files to a new directory
-		//TODO change the strings to whichever points to the new dir
 		
-		this.job = new Job(new Job.Files("fileHandle"), new StatusTracker());
-		//else if there are time/space limits, use the other constructor:
-		//this.job = new Job(new Job.Files("jar", "in", "out", "log"),stattracker, null, null);
+		BufferedReader socketIn;
+		try {
+			socketIn = new BufferedReader( new InputStreamReader(socket.getInputStream()));
+			
+		} catch (IOException e1) {
+			System.out.printf("could not get streamReader on socket: %s\n", e1.getMessage());
+			return;
+		}
+		
+		this.job = Job.fromJSON(socketIn);
+		
+		if(job == null){
+			
+			//TODO check if this is the best way to do this...
+			System.out.println("Job received but it could not be parsed");
+			try {
+				new PrintWriter(socket.getOutputStream()).println("Bad Job");
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+			return;
+		}
+		
+		
 		
 		job.run();
 
@@ -42,7 +58,7 @@ public class JobHandlerThread implements Runnable {
 			return;
 		}
 
-		BufferedReader jobOutput;
+		BufferedReader jobOutput = null;
 		try {
 			switch (job.currentStatus()) {
 				case FINISHED:
@@ -53,6 +69,7 @@ public class JobHandlerThread implements Runnable {
 				case FAILED:
 					socketOut.println(Result.FAILED);
 					jobOutput = new BufferedReader(new FileReader(job.files.log));
+					
 					break;
 
 				case WAITING:
@@ -65,6 +82,36 @@ public class JobHandlerThread implements Runnable {
 			return;
 		}
 
-		// TODO send the jobOutput back down the socket
+		// write the whole result back to the master
+		try {
+			String line;
+			while(null != ( line = jobOutput.readLine())){
+				socketOut.println(line);
+			};
+		} catch (IOException e) {
+			System.out.printf("Couldn't read output back to the master: %s\n", e.getMessage());
+		}
+		
+		
+		File parentDir = job.files.jar.getParentFile();
+		job.files.jar.delete();
+		job.files.in.delete();
+		job.files.out.delete();
+		job.files.log.delete();
+		parentDir.delete();
+		
+		socketOut.close();
+		try {
+			socketIn.close();
+			socket.close();
+			
+			jobOutput.close();
+			
+		} catch (IOException e) {
+			System.out.println("couldn't close sockets & streams");
+			e.printStackTrace();
+		}
+		
+	
 	}
 }
