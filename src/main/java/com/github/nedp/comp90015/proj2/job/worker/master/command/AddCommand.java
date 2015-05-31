@@ -48,21 +48,30 @@ class AddCommand implements Command {
 
         // Add the worker and report success.
         Worker worker;
-		try {
-			worker = new RemoteWorker(this.hostname, this.port);
-			final boolean ok = workers.add(worker);
-			if (ok) {
-				out.printf("Worker (%s) added.\n", worker.identifier());
-				return true;
-			} else {
-				out.printf("Worker (%s) already added.\n", worker.identifier());
-				return false;
-			}
-		} catch (IOException e) {
-			out.printf("Worker not found.\n");
-			e.printStackTrace();
-		}
-		return false;
+        try {
+            worker = new RemoteWorker(this.hostname, this.port);
+            final boolean ok = workers.add(worker);
+
+            if (!ok) {
+                out.printf("Worker (%s) already added.\n", worker.identifier());
+                return false;
+            }
+            out.printf("Worker (%s) added.\n", worker.identifier());
+        } catch (IOException e) {
+            out.printf("Worker at %s:%d not found.\n", this.hostname, this.port);
+            return false;
+        }
+        // Begin the status update thread
+        final Thread memoryThread = new Thread(() -> MaintainWorker(worker, out));
+        memoryThread.setDaemon(true);
+        memoryThread.start();
+        return true;
+    }
+
+    private static void MaintainWorker(@NotNull Worker worker, @NotNull PrintStream out) {
+        worker.maintain();
+        // Report the disconnection when it happens.
+        out.printf("Worker (%s) disconnected.\n", worker.identifier());
     }
 
     static class Factory implements CommandFactory {

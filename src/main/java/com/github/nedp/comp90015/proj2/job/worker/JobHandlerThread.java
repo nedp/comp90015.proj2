@@ -1,20 +1,18 @@
 package com.github.nedp.comp90015.proj2.job.worker;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.PrintWriter;
-
-import javax.net.ssl.SSLSocket;
+import java.io.*;
+import java.net.Socket;
 
 import com.github.nedp.comp90015.proj2.job.*;
+import com.github.nedp.comp90015.proj2.job.worker.master.Result;
 
 public class JobHandlerThread implements Runnable {
 
 	protected Job job;
-	protected SSLSocket socket;
+	protected Socket socket;
 	protected RemoteMaster master;
 	
-	public JobHandlerThread( SSLSocket s, RemoteMaster m) {
+	public JobHandlerThread(Socket s, RemoteMaster m) {
 		this.master = m;
 		this.socket = s;
 	}
@@ -34,33 +32,39 @@ public class JobHandlerThread implements Runnable {
 		//this.job = new Job(new Job.Files("jar", "in", "out", "log"),stattracker, null, null);
 		
 		job.run();
-		
-		try{
-			PrintWriter socketOut = new PrintWriter(socket.getOutputStream());
-			BufferedReader jobOutput;
-			if(job.currentStatus().equals(Status.FINISHED)){
-				socketOut.println("Finished");
-				jobOutput = new BufferedReader(new FileReader(job.files.out));
-				
-				
-			}else if(job.currentStatus().equals(Status.FAILED)){
-				socketOut.println("Failed");
-				jobOutput = new BufferedReader(new FileReader(job.files.log));
-				
-				//otherwise something is wrong
-			} else throw new Exception();
-			
-			
-			/* TODO in this loop you send the jobOutput back down the socket
-			while(){
-				//output file back down socket
-			}
-			*/
-		}catch (Exception e){
-			//TODO stub
+
+		final PrintWriter socketOut;
+		try {
+			socketOut = new PrintWriter(socket.getOutputStream());
+		} catch (IOException e) {
+			System.out.println("couldn't return job result to master:");
+			e.printStackTrace();
 			return;
 		}
 
-	}
+		BufferedReader jobOutput;
+		try {
+			switch (job.currentStatus()) {
+				case FINISHED:
+					socketOut.println(Result.FAILED);
+					jobOutput = new BufferedReader(new FileReader(job.files.out));
+					break;
 
+				case FAILED:
+					socketOut.println(Result.FAILED);
+					jobOutput = new BufferedReader(new FileReader(job.files.log));
+					break;
+
+				case WAITING:
+				case RUNNING:
+					throw new RuntimeException("Job#run returned before the Job terminated.");
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("couldn't open job output:");
+			e.printStackTrace();
+			return;
+		}
+
+		// TODO send the jobOutput back down the socket
+	}
 }
