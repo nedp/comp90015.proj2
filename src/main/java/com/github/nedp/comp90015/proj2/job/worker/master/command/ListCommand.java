@@ -6,6 +6,7 @@ import com.github.nedp.comp90015.proj2.job.worker.master.WorkerPool;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.PrintStream;
+import java.util.ListIterator;
 import java.util.Scanner;
 
 /**
@@ -25,9 +26,12 @@ class ListCommand implements Command {
                          @NotNull PrintStream out) {
         // Identify and report the status of each worker.
         out.printf("Known worker statuses:\n");
-        for (Worker worker : workers.workerList()) {
-            out.printf("\t%s is %s with %dMB of free memory\n",
-                worker.identifier(), worker.status().name(), worker.freeMemory()/ONE_MILLION);
+        final ListIterator<Worker> it = workers.workerList().listIterator();
+        while (it.hasNext()) {
+            final Worker worker = it.next();
+            final int i = it.nextIndex();
+            out.printf("\t%03d: %s is %s with %dMB of free memory\n",
+                i, worker.identifier(), worker.status().name(), worker.freeMemory()/ONE_MILLION);
         }
         return true;
     }
