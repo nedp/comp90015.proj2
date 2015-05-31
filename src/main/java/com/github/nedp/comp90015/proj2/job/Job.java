@@ -225,8 +225,8 @@ public class Job implements Runnable {
 				return null;
 			}
 			
-			int memoryLimit = Integer.parseInt((String) obj.get("MemoryLimit"));
-			int timeout = Integer.parseInt((String) obj.get("Timeout"));
+			int memoryLimit = (int) obj.get("MemoryLimit");
+			int timeout = (int) obj.get("Timeout");
 			
 			String basename = (String) obj.get("Name");
 			basename = basename.substring(0, basename.lastIndexOf((int)'.'));
