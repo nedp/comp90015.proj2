@@ -3,6 +3,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 import javax.net.SocketFactory;
@@ -65,10 +66,54 @@ public class RemoteWorker implements Worker {
         final SocketFactory factory = SSLSocketFactory.getDefault();
         try {
             final Socket jobSocket = factory.createSocket(hostname, jobPort);
-            // TODO Send jobs this way. God I'm tired, I'm going to sleep. Good luck.
+            PrintWriter jobOut = new PrintWriter(jobSocket.getOutputStream());
+            jobOut.println(job.toJSON());
+            jobOut.close();
+            
+            BufferedReader jobIn = new BufferedReader(new InputStreamReader(jobSocket.getInputStream()));
+            String resultType = jobIn.readLine();
+            if(resultType.equals(Job.PARSE_ERROR)){
+            	jobSocket.close();
+            	System.out.println("There was an Error in parsing the job via JSON");
+            	return Result.FAILED;
+            	
+            } else if(resultType.equals(Result.FAILED)){
+            	if(!job.files.log.exists()){
+            		job.files.log.createNewFile();
+            	}
+            	
+            	//read all the lines to the logfile
+            	PrintWriter pw = new PrintWriter(job.files.log);
+            	String line;
+            	while(null != (line = jobIn.readLine())){
+            		pw.println(line);
+            	}
+            	pw.close();
+            	jobSocket.close();
+            	return Result.FAILED;
+            	
+            } else if(resultType.equals(Result.FINISHED)){
+            	if(!job.files.out.exists()){
+            		job.files.out.createNewFile();
+            	}
+            	
+            	//read all the lines to the output file
+            	PrintWriter pw = new PrintWriter(job.files.out);
+            	String line;
+            	while(null != (line = jobIn.readLine())){
+            		pw.println(line);
+            	}
+            	pw.close();
+            	jobSocket.close();
+            	return Result.FINISHED;
+            }
+            
+            
         } catch (IOException e) {
             return Result.DISCONNECTED;
         }
+        
+        
         return Result.DISCONNECTED; // TODO
     }
 

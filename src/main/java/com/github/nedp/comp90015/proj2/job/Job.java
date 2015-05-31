@@ -31,6 +31,8 @@ public class Job implements Runnable {
     public static final int NO_LIMIT = -1;
     public static final int NO_TIMEOUT = -1;
 
+    public static final String PARSE_ERROR = "Bad Job";
+    
     private static final String JAVA = "java";
     private static final String JAR_FLAG = "-jar";
 
@@ -306,7 +308,7 @@ public class Job implements Runnable {
      * @return null if error but otherwise a JSONstring that can be sent over the network
      */
     @SuppressWarnings("unchecked")
-	public  String toJSON(Job job){
+	public  String toJSON(){
 		JSONObject obj = new JSONObject();
 		obj.put("Type", "Job");
 		obj.put("Name", this.name());

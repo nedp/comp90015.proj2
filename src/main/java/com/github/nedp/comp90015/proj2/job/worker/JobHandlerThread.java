@@ -37,7 +37,7 @@ public class JobHandlerThread implements Runnable {
 			//TODO check if this is the best way to do this...
 			System.out.println("Job received but it could not be parsed");
 			try {
-				new PrintWriter(socket.getOutputStream()).println("Bad Job");
+				new PrintWriter(socket.getOutputStream()).println(Job.PARSE_ERROR);
 			} catch (IOException e) {
 				
 				e.printStackTrace();
@@ -62,7 +62,7 @@ public class JobHandlerThread implements Runnable {
 		try {
 			switch (job.currentStatus()) {
 				case FINISHED:
-					socketOut.println(Result.FAILED);
+					socketOut.println(Result.FINISHED);
 					jobOutput = new BufferedReader(new FileReader(job.files.out));
 					break;
 
