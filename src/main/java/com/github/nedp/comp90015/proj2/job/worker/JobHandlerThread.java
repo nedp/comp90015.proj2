@@ -61,6 +61,7 @@ public class JobHandlerThread implements Runnable {
 			System.out.println("Job received but it could not be parsed");
 			e.printStackTrace();
 		}
+		this.cleanup(job);
 		this.close(socketIn, socketOut);
 	}
 
