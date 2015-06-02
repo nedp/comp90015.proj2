@@ -38,6 +38,13 @@ public interface Worker {
     Result execute(Job job);
 
     /**
+     * Performs any work necessary to keep the Worker operational.
+     * <p/>
+     * The Worker is guaranteed to be operational until this method returns.
+     */
+    void maintain();
+
+    /**
      * Retrieves the last known status of the remote Worker.
      * <p/>
      * May request an update but doesn't have to.
@@ -47,26 +54,12 @@ public interface Worker {
     Status status();
 
     /**
-     * Retrieves the last known CPU load of the remote Worker.
-     * <p/>
-     * May request an update but doesn't have to.
-     *
-     * @return the load on a scale where 0.0 = no usage,
-     * and 1.0 = nominal full usage.
-     */
-    @SuppressWarnings({"SameReturnValue", "unused"})
-    // TODO not implemented, dependents not implemented
-    double cpuLoad();
-
-    /**
      * Retrieves the last known amount of free memory of the remote Worker.
      * <p/>
      * May request an update but doesn't have to.
      *
      * @return the number of bytes of free memory.
      */
-    @SuppressWarnings({"SameReturnValue", "unused"})
-    // TODO not implemented, dependents not implemented
     long freeMemory();
 
     /**

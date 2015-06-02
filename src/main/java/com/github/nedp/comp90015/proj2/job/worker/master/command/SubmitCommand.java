@@ -114,7 +114,5 @@ class SubmitCommand implements Command {
             }
             return new SubmitCommand(files, memoryLimit, timeout);
         }
-
-
     }
 }

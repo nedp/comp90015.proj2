@@ -4,8 +4,10 @@ import com.github.nedp.comp90015.proj2.job.worker.master.JobManager;
 import com.github.nedp.comp90015.proj2.job.worker.master.RemoteWorker;
 import com.github.nedp.comp90015.proj2.job.worker.master.Worker;
 import com.github.nedp.comp90015.proj2.job.worker.master.WorkerPool;
+
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -45,15 +47,31 @@ class AddCommand implements Command {
                          @NotNull PrintStream out) {
 
         // Add the worker and report success.
-        final Worker worker = new RemoteWorker(this.hostname, this.port);
-        final boolean ok = workers.add(worker);
-        if (ok) {
+        Worker worker;
+        try {
+            worker = new RemoteWorker(this.hostname, this.port);
+            final boolean ok = workers.add(worker);
+
+            if (!ok) {
+                out.printf("Worker (%s) already added.\n", worker.identifier());
+                return false;
+            }
             out.printf("Worker (%s) added.\n", worker.identifier());
-            return true;
-        } else {
-            out.printf("Worker (%s) already added.\n", worker.identifier());
+        } catch (IOException e) {
+            out.printf("Worker at %s:%d not found.\n", this.hostname, this.port);
             return false;
         }
+        // Begin the status update thread
+        final Thread memoryThread = new Thread(() -> MaintainWorker(worker, out));
+        memoryThread.setDaemon(true);
+        memoryThread.start();
+        return true;
+    }
+
+    private static void MaintainWorker(@NotNull Worker worker, @NotNull PrintStream out) {
+        worker.maintain();
+        // Report the disconnection when it happens.
+        out.printf("Worker (%s) disconnected.\n", worker.identifier());
     }
 
     static class Factory implements CommandFactory {
