@@ -1,154 +1,191 @@
 package com.github.nedp.comp90015.proj2.job.worker.master
 
 import com.github.nedp.comp90015.proj2.job.Job
-import static com.github.nedp.comp90015.proj2.job.worker.master.Result.*;
-
 import spock.lang.Specification
+
+import static com.github.nedp.comp90015.proj2.job.worker.master.Result.*
 
 /**
  * Created by nedp on 18/05/15.
  */
 class JobManagerTest extends Specification {
-    JobManager testTarget
-    WorkerPool pool
-    Job job
-    int id
-    Result result
+  JobManager testTarget
+  WorkerPool pool
+  Job job
+  int id
+  Result result
 
-    def setup() {
-        job = Stub Job
-        pool = Mock WorkerPool
-        testTarget = new JobManager(pool)
+  def setup() {
+    job = Stub Job
+    pool = Mock WorkerPool
+    testTarget = new JobManager(pool)
+  }
+
+  def "#submit stores the job with no result"() {
+    0 * _
+    given:
+    jobIsSubmitted()
+    expect:
+    resultIsNotPresent()
+  }
+
+  def "#execute stores and returns the result of the job"() {
+    0 * _
+    given:
+    jobIsSubmitted()
+
+    when:
+    jobIsExecuted()
+    then:
+    interaction {poolAllocatesProducing expected}
+
+    expect:
+    executionResultWas expected
+    and:
+    storedResultIs expected
+
+    where:
+    expected << [DISCONNECTED, FAILED, FINISHED]
+  }
+
+  def "#execute propogates exceptions correctly"() {
+    0 * _
+    given:
+    jobIsSubmitted()
+
+    when:
+    jobIsExecuted()
+    then:
+    interaction {emptyPoolAllocationFails()}
+    then:
+    thrown WorkerUnavailableException
+
+    expect:
+    resultIsNotPresent()
+  }
+
+  def "#nameOf returns the name of the job"() {
+    0 * _
+    given:
+    jobIsSubmitted()
+    and:
+    jobHasName expected
+    expect:
+    reportedNameIs expected
+    where:
+    expected << ["", " ", "abc", "acasd.jar", "AKSJDHAKJSDHASKJDHASLKJDGASLKDJHASD"]
+  }
+
+  def "#hasAllocated returns whether the job has been allocated"() {
+    0 * _
+    given:
+    jobIsSubmitted()
+    and:
+    interaction {
+      if (allocate) {
+        poolAllocatesProducing FINISHED
+        jobIsExecuted()
+      }
     }
 
-    def "#submit stores the job with no result"() {
-        0 * _
-        given: jobIsSubmitted()
-        expect: resultIsNotPresent()
-    }
+    expect:
+    testTarget.hasAllocated(id) == allocate
 
-    def "#execute stores and returns the result of the job"() {
-        0 * _
-        given: jobIsSubmitted()
+    where:
+    allocate << [true, false]
+  }
 
-        when: jobIsExecuted()
-        then: interaction { poolAllocatesProducing expected }
+  /*
+   * Non-contract behaviour:
+   */
 
-        expect: executionResultWas expected
-        and: storedResultIs expected
+  def "#execute, #resultOf, #nameOf, and #hasAllocated throw an exception for untracked Jobs"() {
+    0 * _
+    given: "the job was not submitted"; id = 0
 
-        where: expected << [DISCONNECTED, FAILED, FINISHED]
-    }
+    when:
+    testTarget.execute(id)
+    then:
+    thrown IndexOutOfBoundsException
 
-    def "#execute propogates exceptions correctly"() {
-        0 * _
-        given: jobIsSubmitted()
+    when:
+    testTarget.nameOf(id)
+    then:
+    thrown IndexOutOfBoundsException
 
-        when: jobIsExecuted()
-        then: interaction { emptyPoolAllocationFails() }
-        then: thrown WorkerUnavailableException
+    when:
+    testTarget.resultOf(id)
+    then:
+    thrown IndexOutOfBoundsException
 
-        expect: resultIsNotPresent()
-    }
+    when:
+    testTarget.hasAllocated(id)
+    then:
+    thrown IndexOutOfBoundsException
+  }
 
-    def "#nameOf returns the name of the job"() {
-        0 * _
-        given: jobIsSubmitted()
-        and: jobHasName expected
-        expect: reportedNameIs expected
-        where: expected << ["", " ", "abc", "acasd.jar", "AKSJDHAKJSDHASKJDHASLKJDGASLKDJHASD"]
-    }
+  def "#execute throws an exception for already-allocated Jobs"() {
+    0 * _
+    given:
+    jobIsSubmitted()
+    and:
+    poolAllocatesProducing expected
+    and:
+    jobIsExecuted()
 
-    def "#hasAllocated returns whether the job has been allocated"() {
-        0 * _
-        given: jobIsSubmitted()
-        and: interaction {
-            if (allocate) {
-                poolAllocatesProducing FINISHED
-                jobIsExecuted()
-            }
-        }
+    expect:
+    executionResultWas expected
 
-        expect: testTarget.hasAllocated(id) == allocate
+    when:
+    jobIsExecuted()
+    then:
+    thrown IllegalStateException
 
-        where: allocate << [true, false]
-    }
+    where:
+    expected << [FINISHED, FAILED, DISCONNECTED]
+  }
 
-    /*
-     * Non-contract behaviour:
-     */
-    def "#execute, #resultOf, #nameOf, and #hasAllocated throw an exception for untracked Jobs"() {
-        0 * _
-        given: "the job was not submitted"; id = 0
+  /*
+   * Helpers
+   */
 
-        when: testTarget.execute(id)
-        then: thrown IndexOutOfBoundsException
+  def jobIsSubmitted() {
+    id = testTarget.submit(job)
+  }
 
-        when: testTarget.nameOf(id)
-        then: thrown IndexOutOfBoundsException
+  def jobIsExecuted() {
+    result = testTarget.execute(id)
+  }
 
-        when: testTarget.resultOf(id)
-        then: thrown IndexOutOfBoundsException
+  def jobIsAllocated() {
+    testTarget.jobResults.get(id).hasBeenAllocated = true
+  }
 
-        when: testTarget.hasAllocated(id)
-        then: thrown IndexOutOfBoundsException
-    }
+  def jobHasName(String name) {
+    job.name() >> name
+  }
 
-    def "#execute throws an exception for already-allocated Jobs"() {
-        0 * _
-        given: jobIsSubmitted()
-        and: poolAllocatesProducing expected
-        and: jobIsExecuted()
+  def poolAllocatesProducing(Result result) {
+    1 * pool.allocateAndExecute(job) >> result
+  }
 
-        expect: executionResultWas expected
+  def emptyPoolAllocationFails() {
+    1 * pool.allocateAndExecute(job) >> {throw new WorkerUnavailableException()}
+  }
 
-        when: jobIsExecuted()
-        then: thrown IllegalStateException
+  def resultIsNotPresent() {
+    !testTarget.resultOf(id).isPresent()
+  }
 
-        where: expected << [FINISHED, FAILED, DISCONNECTED]
-    }
+  def executionResultWas(Result expected) {
+    result == expected
+  }
 
-    /*
-     * Helpers
-     */
+  def storedResultIs(Result expected) {
+    testTarget.resultOf(id) == Optional.of(expected)
+  }
 
-    def jobIsSubmitted() {
-        id = testTarget.submit(job)
-    }
-
-    def jobIsExecuted() {
-        result = testTarget.execute(id)
-    }
-
-    def jobIsAllocated() {
-        testTarget.jobResults.get(id).hasBeenAllocated = true
-    }
-
-    def jobHasName(String name) {
-        job.name() >> name
-    }
-
-    def poolAllocatesProducing(Result result) {
-        1 * pool.allocateAndExecute(job) >> result
-    }
-
-    def emptyPoolAllocationFails() {
-        1 * pool.allocateAndExecute(job) >> { throw new WorkerUnavailableException() }
-    }
-
-    def resultIsNotPresent() {
-        !testTarget.resultOf(id).isPresent()
-    }
-
-    def executionResultWas(Result expected) {
-        result == expected
-    }
-
-    def storedResultIs(Result expected) {
-        testTarget.resultOf(id) == Optional.of(expected)
-    }
-
-    def reportedNameIs(String expected) {
-        testTarget.nameOf(id) == expected
-    }
+  def reportedNameIs(String expected) {
+    testTarget.nameOf(id) == expected
+  }
 }
