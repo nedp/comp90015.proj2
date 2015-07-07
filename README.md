@@ -1,16 +1,19 @@
 # comp90015.proj2
+
 Project 2 (a Master/Worker job system) for Distributed Systems at The University of Melbourne.
 
 # First Time Setup
 
 1. Clone the repository `ssh://git@github.com/nedp/comp90015.proj2`.
 2. Change to branch `master`
-3. Install maven from https://maven.apache.org/download.cgi --
+3. Install maven from [the official site](https://maven.apache.org/download.cgi).
    Follow Maven's README instructions.
 4. Run `mvn test` to check that all technologies are working on your machine.
 
+# Contribution
 
 ## git
+
 Workflow:
 
 1. Checkout master
@@ -22,3 +25,7 @@ Workflow:
 Branch names should identify the feature/component being worked on and who is responsible for it; eg. `nedp/job-starting`
 
 Remember to add any user-specific project settings files (eg. for IDEs) to .gitignore.
+
+## Coding Style
+
+Adhere to [Google Java Style](http://google.github.io/styleguide/javaguide.html) wherever possible.

@@ -8,40 +8,40 @@ import org.jetbrains.annotations.NotNull;
  * Created by nedp on 21/05/15.
  */
 public class RemoteWorker implements Worker {
-    private final String hostname;
-    private final int port;
+  private final String hostname;
+  private final int port;
 
-    public RemoteWorker(@NotNull String hostname, int port) {
-        this.hostname = hostname;
-        this.port = port;
-        // TODO
-    }
+  public RemoteWorker(@NotNull String hostname, int port) {
+    this.hostname = hostname;
+    this.port = port;
+    // TODO
+  }
 
-    @NotNull
-    @Override
-    public Result execute(Job job) {
-        return Result.DISCONNECTED; // TODO
-    }
+  @NotNull
+  @Override
+  public Result execute(Job job) {
+    return Result.DISCONNECTED; // TODO
+  }
 
-    @NotNull
-    @Override
-    public Status status() {
-        return Status.DISCONNECTED; // TODO
-    }
+  @NotNull
+  @Override
+  public Status status() {
+    return Status.DISCONNECTED; // TODO
+  }
 
-    @Override
-    public double cpuLoad() {
-        return 0; // TODO
-    }
+  @Override
+  public double cpuLoad() {
+    return 0; // TODO
+  }
 
-    @Override
-    public long freeMemory() {
-        return 0; // TODO
-    }
+  @Override
+  public long freeMemory() {
+    return 0; // TODO
+  }
 
-    @NotNull
-    @Override
-    public String identifier() {
-        return String.format("Worker Stub %s:%d", this.hostname, this.port); // TODO
-    }
+  @NotNull
+  @Override
+  public String identifier() {
+    return String.format("Worker Stub %s:%d", this.hostname, this.port); // TODO
+  }
 }
