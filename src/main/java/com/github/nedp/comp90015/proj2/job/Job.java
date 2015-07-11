@@ -199,14 +199,16 @@ public class Job implements Runnable {
     if (!jobDir.mkdir()) {
       throw new IOException(String.format("Couldn't create directory: %s", jobDir.getName()));
     }
+    jobDir.deleteOnExit();
     final Base64.Decoder decoder = Base64.getDecoder();
 
-    //write all the files to Disk
+    // Write the jar and input files to disk.
+    // Note: the job itself is responsible for creating the log and output files.
     final Job.Files jobFiles = new Job.Files(jobDir.getName() + File.separator + baseName);
-    assert (newFile(jobFiles.jar, (String) obj.get("JarFile"), decoder));
-    assert (newFile(jobFiles.in, (String) obj.get("InFile"), decoder));
-    assert (newFile(jobFiles.out, (String) obj.get("OutFile"), decoder));
-    assert (newFile(jobFiles.log, (String) obj.get("LogFile"), decoder));
+    final boolean ok =
+        newFile(jobFiles.jar, (String) obj.get("JarFile"), decoder)
+        && newFile(jobFiles.in, (String) obj.get("InFile"), decoder);
+    assert (ok);
 
     return new Job(jobFiles, new StatusTracker(), memoryLimit, timeout);
   }
@@ -214,6 +216,7 @@ public class Job implements Runnable {
   private static boolean newFile(File file, String content, Base64.Decoder decoder)
       throws IOException {
     final boolean ok = file.createNewFile();
+    file.deleteOnExit();
     java.nio.file.Files.write(file.toPath(), decoder.decode(content));
     return ok;
   }

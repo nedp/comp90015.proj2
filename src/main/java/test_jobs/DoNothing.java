@@ -27,10 +27,12 @@ class DoNothing {
     try {
       if (!in.toFile().canRead() || !out.toFile().createNewFile()) {
         System.err.println(STDERR);
+        System.out.println("false value");
         System.exit(EXIT_FAILURE);
       }
     } catch (IOException e) {
       System.err.println(STDERR);
+      System.out.println("IOException");
       System.exit(EXIT_FAILURE);
     }
 
