@@ -1,6 +1,7 @@
 package com.github.nedp.comp90015.proj2.job.worker;
 
 import com.github.nedp.comp90015.proj2.job.Job;
+import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,8 +27,8 @@ public class JobHandlerThread implements Runnable {
     try {
       socketOut = new PrintWriter(socket.getOutputStream());
     } catch (IOException e) {
-      System.out.println("couldn't return job result to master:");
-      e.printStackTrace();
+      System.out.printf("IOException creating PrintWriter running Job: %s\n", e.getMessage());
+      this.close(null, null);
       return;
     }
     final BufferedReader socketIn;
@@ -35,40 +36,45 @@ public class JobHandlerThread implements Runnable {
       socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     } catch (IOException e) {
       System.out.printf("could not get streamReader on socket: %s\n", e.getMessage());
+      this.close(null, socketOut);
       return;
     }
 
-    // Parse and run the job.
-    String JSONStringJob = "";
+    // Close the sockets in `finally` block.
     try {
-      JSONStringJob = socketIn.readLine();
-    } catch (IOException e) {
-      System.out.println("IO Error reading from job socket");
-      e.printStackTrace();
-    }
-    final Job job = Job.fromJSON(JSONStringJob);
-    if (job == null) {
-      System.out.println("Job received but it could not be parsed");
+      // Parse and run the job.
+      final String JSONStringJob;
       try {
-        PrintWriter pw = new PrintWriter(socket.getOutputStream());
-        pw.println(Job.PARSE_ERROR);
-        pw.close();
+        JSONStringJob = socketIn.readLine();
       } catch (IOException e) {
-        e.printStackTrace();
+        System.out.printf("IO Error reading from job socket: %s\n", e.getMessage());
+        return;
       }
-      return;
-    }
-    job.run();
 
-    // Handle the result and close the sockets.
-    try {
-      this.handleJobResult(job, socketOut);
-    } catch (FileNotFoundException e) {
-      System.out.println("Job received but it could not be parsed");
-      e.printStackTrace();
+      // Parse the job.
+      final Job job;
+      try {
+        job = Job.fromJSON(JSONStringJob);
+      } catch (ParseException | IOException e) {
+        System.out.printf("%s parsing Job from JSON: %s", e.getClass().getName(), e.getMessage());
+        return;
+      }
+
+      // Run it, handle the result, then clean it up.
+      job.run();
+      try {
+        this.handleJobResult(job, socketOut);
+      } catch (FileNotFoundException e) {
+        System.out.printf("Required file not found when handling job result: %s", e.getMessage());
+        return;
+      } finally {
+        if (!this.cleanup(job)) {
+          System.out.printf("Error cleaning up Job: %s\n", job.name());
+        }
+      }
+    } finally {
+      this.close(socketIn, socketOut);
     }
-    this.cleanup(job);
-    this.close(socketIn, socketOut);
   }
 
   private void handleJobResult(Job job, PrintWriter socketOut)
@@ -85,7 +91,7 @@ public class JobHandlerThread implements Runnable {
         jobOutput = new BufferedReader(new FileReader(job.files.log));
         break;
 
-      case WAITING:
+      case WAITING: // fallthrough
       case RUNNING:
       default:
         throw new RuntimeException("Job#run returned before the Job terminated.");
@@ -106,11 +112,13 @@ public class JobHandlerThread implements Runnable {
     socketOut.close();
     try {
       socketIn.close();
-      socket.close();
-
     } catch (IOException e) {
-      System.out.println("couldn't close sockets & streams");
-      e.printStackTrace();
+      System.out.printf("IOException closing socket: %s\n", e.getMessage());
+    }
+    try {
+      socket.close();
+    } catch (IOException e) {
+      System.out.printf("IOException closing socket: %s\n", e.getMessage());
     }
   }
 
