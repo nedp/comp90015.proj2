@@ -6,7 +6,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master;
  * @author nedp
  */
 public enum Result {
-    DISCONNECTED,
-    FINISHED,
-    FAILED,
+  DISCONNECTED,
+  FINISHED,
+  FAILED,
 }

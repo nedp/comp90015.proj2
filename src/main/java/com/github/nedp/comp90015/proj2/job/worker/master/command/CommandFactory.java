@@ -10,12 +10,12 @@ import java.util.Scanner;
  * @author nedp
  */
 public interface CommandFactory {
-    /**
-     * Builds a concrete Command from parameters.
-     *
-     * @param params  the Scanner providing the parameters.
-     * @return an instance of Command.
-     */
-    @NotNull
-    Command fromParams(Scanner params);
+  /**
+   * Builds a concrete Command from parameters.
+   *
+   * @param params the Scanner providing the parameters.
+   * @return an instance of Command.
+   */
+  @NotNull
+  Command fromParams(Scanner params);
 }

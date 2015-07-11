@@ -12,18 +12,18 @@ import java.io.PrintStream;
  * @author nedp
  */
 class UsageCommand implements Command {
-    @NotNull
-    private final String message;
+  @NotNull
+  private final String message;
 
-    UsageCommand(@NotNull String message) {
-        this.message = message;
-    }
+  UsageCommand(@NotNull String message) {
+    this.message = message;
+  }
 
-    @Override
-    public boolean runOn(@NotNull JobManager jobs,
-                         @NotNull WorkerPool workers,
-                         @NotNull PrintStream out) {
-        out.printf("Invalid arguments. Correct usage is:\n\t> %s\n", message);
-        return true;
-    }
+  @Override
+  public boolean runOn(@NotNull JobManager jobs,
+                       @NotNull WorkerPool workers,
+                       @NotNull PrintStream out) {
+    out.printf("Invalid arguments. Correct usage is:\n\t> %s\n", message);
+    return true;
+  }
 }
