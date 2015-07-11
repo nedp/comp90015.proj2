@@ -15,41 +15,41 @@ import java.util.Scanner;
  * @author nedp
  */
 class ListCommand implements Command {
-    private static final long ONE_MILLION = 1000000;
+  private static final long ONE_MILLION = 1000000;
 
-    private ListCommand() {
+  private ListCommand() {
+  }
+
+  @Override
+  public boolean runOn(@NotNull JobManager jobs,
+                       @NotNull WorkerPool workers,
+                       @NotNull PrintStream out) {
+    // Identify and report the status of each worker.
+    out.printf("Known worker statuses:\n");
+    final ListIterator<Worker> it = workers.workerList().listIterator();
+    while (it.hasNext()) {
+      final Worker worker = it.next();
+      final int i = it.nextIndex();
+      out.printf("\t%03d: %s is %s with %dMB of free memory\n",
+          i, worker.identifier(), worker.status().name(), worker.freeMemory() / ONE_MILLION);
     }
+    return true;
+  }
 
+  static class Factory implements CommandFactory {
+    /**
+     * Attempts to build an instance of ListCommand from parameters.
+     * <p>
+     * No parameters are required.
+     *
+     * @param params the Scanner providing the parameters.
+     * @return an instance of ListCommand built from the parameters
+     * if possible, otherwise a UsageCommand specifying correct usage.
+     */
+    @NotNull
     @Override
-    public boolean runOn(@NotNull JobManager jobs,
-                         @NotNull WorkerPool workers,
-                         @NotNull PrintStream out) {
-        // Identify and report the status of each worker.
-        out.printf("Known worker statuses:\n");
-        final ListIterator<Worker> it = workers.workerList().listIterator();
-        while (it.hasNext()) {
-            final Worker worker = it.next();
-            final int i = it.nextIndex();
-            out.printf("\t%03d: %s is %s with %dMB of free memory\n",
-                i, worker.identifier(), worker.status().name(), worker.freeMemory()/ONE_MILLION);
-        }
-        return true;
+    public Command fromParams(Scanner params) {
+      return new ListCommand();
     }
-
-    static class Factory implements CommandFactory  {
-        /**
-         * Attempts to build an instance of ListCommand from parameters.
-         * <p/>
-         * No parameters are required.
-         *
-         * @param params  the Scanner providing the parameters.
-         * @return an instance of ListCommand built from the parameters
-         * if possible, otherwise a UsageCommand specifying correct usage.
-         */
-        @NotNull
-        @Override
-        public Command fromParams(Scanner params) {
-            return new ListCommand();
-        }
-    }
+  }
 }
