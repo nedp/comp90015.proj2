@@ -32,8 +32,12 @@ class JobTest extends Specification {
   static def USE_MEMORY_FILES = new Job.Files("src/test/resources/test_jobs/use_memory");
   static def TAKE_TIME_FILES = new Job.Files("src/test/resources/test_jobs/take_time");
 
+  Job underTest;
+  StatusTracker tracker;
+
   def setup() {
     deleteOutput()
+    tracker = Mock(StatusTracker);
   }
 
   def cleanup() {
@@ -42,13 +46,12 @@ class JobTest extends Specification {
 
   def "delegates #currentStatus to tracker#current"() {
     given:
-    def StatusTracker tracker = Mock()
     1 * tracker.current() >> want
     0 * _
-    def job = new Job(FILES, tracker)
+    aDefaultJob()
 
     expect:
-    job.currentStatus() == want
+    thatTheJobHasStatus(want)
 
     where:
     want << [WAITING, RUNNING, FINISHED, FAILED]
@@ -56,11 +59,11 @@ class JobTest extends Specification {
 
   def "runs using the output files, and finishes"() {
     given:
-    StatusTracker tracker = Mock()
-    def job = new Job(FILES, tracker)
+    aDefaultJob()
 
     when:
-    job.run()
+    theJobIsRun()
+
     then:
     OUT.exists()
     LOG.exists()
@@ -71,11 +74,10 @@ class JobTest extends Specification {
 
   def "detects failure to invoke"() {
     given:
-    StatusTracker tracker = Mock()
-    def job = new Job(new Job.Files(jar, in_, out, log), tracker)
+    aJobWithFiles(new Job.Files(jar, in_, out, log))
 
     when:
-    job.run()
+    theJobIsRun()
     then:
     1 * tracker.start()
     1 * tracker.finish(false)
@@ -91,11 +93,11 @@ class JobTest extends Specification {
 
   def "detects non-zero exit code failure"() {
     given:
-    StatusTracker tracker = Mock()
-    def job = new Job(BAD_FILES, tracker)
+    aBadJob()
 
     when:
-    job.run()
+    theJobIsRun()
+
     then:
     1 * tracker.start()
     1 * tracker.finish(false)
@@ -104,11 +106,10 @@ class JobTest extends Specification {
 
   def "routes both stderr and stdout to _.log"() {
     given:
-    StatusTracker tracker = Mock()
-    def job = new Job(FILES, tracker)
+    aDefaultJob()
 
     when:
-    job.run()
+    theJobIsRun()
     def lines = Files.readAllLines(LOG.toPath())
 
     then:
@@ -139,11 +140,10 @@ class JobTest extends Specification {
   @Ignore("Takes a long time")
   def "Runs wordcount with expected output"() {
     given:
-    StatusTracker tracker = Mock()
-    def job = new Job(WORD_COUNT_FILES, tracker)
+    aWordCountJob()
 
     when:
-    job.run()
+    theJobIsRun()
     then:
     1 * tracker.start()
     1 * tracker.finish(true)
@@ -154,13 +154,13 @@ class JobTest extends Specification {
     want.equals(got)
   }
 
+  @Ignore("Takes a long time")
   def "Jobs timeout correctly"() {
     given:
-    StatusTracker tracker = Mock()
-    def job = new Job(TAKE_TIME_FILES, tracker, Job.NO_LIMIT, timeout)
+    underTest = new Job(TAKE_TIME_FILES, tracker, Job.NO_LIMIT, timeout)
 
     when:
-    job.run()
+    theJobIsRun()
     then:
     1 * tracker.start()
     1 * tracker.finish(ok)
@@ -171,21 +171,17 @@ class JobTest extends Specification {
     -1      || true
     0       || true
     1       || false
-    2       || false
-    3       || false
     4       || false
     // Grace area - actual expected time taken is 5 seconds.
     6 || true
-    7 || true
   }
 
   def "Jobs run out of memory correctly"() {
     given:
-    StatusTracker tracker = Mock()
-    def job = new Job(USE_MEMORY_FILES, tracker, memLimit, Job.NO_TIMEOUT)
+    underTest = new Job(USE_MEMORY_FILES, tracker, memLimit, Job.NO_TIMEOUT)
 
     when:
-    job.run()
+    theJobIsRun()
     then:
     1 * tracker.start()
     1 * tracker.finish(ok)
@@ -205,11 +201,79 @@ class JobTest extends Specification {
 
   def "#name is correct"() {
     given:
-    Job underTest = new Job(files, Stub(StatusTracker))
+    aJobWithFiles(files)
     expect:
-    underTest.name() == files.jar.name
+    thatTheJobHasName(files.jar.name)
     where:
     files << [FILES, BAD_FILES, WORD_COUNT_FILES, USE_MEMORY_FILES, TAKE_TIME_FILES]
+  }
+
+  def "toJSON and fromJSON work correctly together"() {
+    // Can't catch file errors
+    given:
+    String baseName = name + "/" + name
+    underTest = new Job(new Job.Files(baseName), tracker, memoryLimit, timeout);
+    Job result = Job.fromJSON(underTest.toJSON())
+
+    expect: "the initial Job and processed Job to be the same"
+    (String) result.files.jar == baseName + ".jar"
+    (String) result.files.in == baseName + ".in"
+    (String) result.files.out == baseName + ".out"
+    (String) result.files.log == baseName + ".log"
+    result.name() == underTest.name()
+    result.memoryLimit == underTest.memoryLimit
+    result.timeout == underTest.timeout
+
+    cleanup: "remove files from the Job"
+    try {
+      new File(baseName + ".jar").delete()
+    } catch (_) {}
+    try {
+      new File(baseName + ".in").delete()
+    } catch (_) {}
+    try {
+      new File(baseName + ".out").delete()
+    } catch (_) {}
+    try {
+      new File(baseName + ".log").delete()
+    } catch (_) {}
+    try {
+      new File(name).delete()
+    } catch (_) {}
+
+    where:
+    name  | memoryLimit | timeout
+    "abc" | 0           | 5
+    "xyz" | 5           | 0
+    "ijk" | -1          | -1
+  }
+
+  def aDefaultJob() {
+    aJobWithFiles(FILES)
+  }
+
+  def aBadJob() {
+    aJobWithFiles(BAD_FILES)
+  }
+
+  def aWordCountJob() {
+    aJobWithFiles(WORD_COUNT_FILES)
+  }
+
+  def aJobWithFiles(Job.Files files) {
+    underTest = new Job(files, tracker)
+  }
+
+  def theJobIsRun() {
+    underTest.run()
+  }
+
+  def thatTheJobHasName(String name) {
+    underTest.name() == name
+  }
+
+  def thatTheJobHasStatus(Status status) {
+    underTest.currentStatus() == status
   }
 
   def deleteOutput() {
