@@ -3,7 +3,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master
 import com.github.nedp.comp90015.proj2.job.Job
 import spock.lang.Specification
 
-import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.DISCONNECTED
+import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.DOWN
 import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.RUNNING
 
 /**
@@ -63,8 +63,8 @@ class LoadBalancerTest extends Specification {
     where:
     freeMemories  | statuses                                       || expected
     [0, 1, 2, 3]  | [RUNNING, RUNNING, RUNNING, RUNNING]           || 3
-    [0, 4, 3, 2]  | [RUNNING, DISCONNECTED, RUNNING, RUNNING]      || 2
-    [10, 1, 0, 0] | [RUNNING, RUNNING, DISCONNECTED, DISCONNECTED] || 0
+    [0, 4, 3, 2]  | [RUNNING, DOWN, RUNNING, RUNNING]      || 2
+    [10, 1, 0, 0] | [RUNNING, RUNNING, DOWN, DOWN] || 0
   }
 
   def aStandardSystemUnderTest() {
@@ -91,7 +91,7 @@ class LoadBalancerTest extends Specification {
   }
 
   def aDisconnectedWorker() {
-    worker.status() >> DISCONNECTED
+    worker.status() >> DOWN
     workers = [worker]
   }
 

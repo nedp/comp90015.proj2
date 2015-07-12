@@ -75,6 +75,6 @@ public interface Worker {
    */
   enum Status {
     RUNNING,
-    DISCONNECTED,;
+    DOWN,;
   }
 }
