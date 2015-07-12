@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.net.Socket;
 
 /**
@@ -16,6 +17,9 @@ import java.net.Socket;
  * Created by nedp on 21/05/15.
  */
 public class RemoteWorker implements Worker {
+
+  private static final int TEN_SECONDS = 10000;
+
   private final String hostname;
   private final int port;
   private final int jobPort;
@@ -38,6 +42,7 @@ public class RemoteWorker implements Worker {
     this.port = port;
     final SocketFactory factory = SSLSocketFactory.getDefault();
     final Socket workerSocket = factory.createSocket(hostname, port);
+    workerSocket.setSoTimeout(TEN_SECONDS);
 
     // Get the port for the job from the Worker
     this.input = new BufferedReader(new InputStreamReader(workerSocket.getInputStream()));
@@ -49,71 +54,89 @@ public class RemoteWorker implements Worker {
    */
   public synchronized void maintain() {
     this.status = Status.RUNNING;
-    this.input.lines().forEachOrdered(
-        line -> RemoteWorker.this.freeMemory = Long.parseLong(line.split(":")[1]));
-    this.status = Status.DISCONNECTED;
+    try {
+      this.input.lines().forEachOrdered(
+          line -> RemoteWorker.this.freeMemory = Long.parseLong(line.split(":")[1]));
+    } catch (UncheckedIOException ignored) {} // Handled by setting status to DOWN.
+    this.status = Status.DOWN;
   }
 
   @NotNull
   @Override
   public Result execute(Job job) {
-    if (this.status == Status.DISCONNECTED) {
+    if (this.status == Status.DOWN) {
       return Result.DISCONNECTED;
     }
 
     final SocketFactory factory = SSLSocketFactory.getDefault();
     try {
       final Socket jobSocket = factory.createSocket(hostname, jobPort);
-      PrintWriter jobOut = new PrintWriter(jobSocket.getOutputStream());
-      String JSONJobString = job.toJSON();
-      if (null == JSONJobString) {
-        System.out.println("Error Turning Job into JSON");
-        return Result.FAILED;
-      }
-      jobOut.println(JSONJobString);
-      jobOut.flush();
+      jobSocket.setSoTimeout(TEN_SECONDS);
 
-      BufferedReader jobIn = new BufferedReader(new InputStreamReader(jobSocket.getInputStream()));
-      String resultType = jobIn.readLine();
-      System.out.println("returned string was " + resultType);
-      if (resultType.equals(Job.PARSE_ERROR)) {
-        //jobSocket.close();
-        System.out.println("There was an Error in parsing the job via JSON");
-        return Result.FAILED;
+      try {
+        PrintWriter jobOut = new PrintWriter(jobSocket.getOutputStream());
+        String JSONJobString = job.toJSON();
+        if (null == JSONJobString) {
+          System.out.println("Error Turning Job into JSON");
+          return Result.FAILED;
+        }
+        jobOut.println(JSONJobString);
+        jobOut.flush();
 
-      } else if (resultType.equals("FAILED")) {
-        if (!job.files.log.exists()) {
-          job.files.log.createNewFile();
+        BufferedReader jobIn = new BufferedReader(new InputStreamReader(jobSocket.getInputStream()));
+
+        // Until the result gets sent back to us, check the socket
+        // and this RemoteWorker's status each 10 seconds.
+        // If the RemoteWorker is ever DOWN, report the Job as DISCONNECTED.
+        String resultType;
+        while (true) {
+          try {
+            resultType = jobIn.readLine();
+            break;
+          } catch (IOException e) {
+            if (this.status == Status.DOWN) {
+              return Result.DISCONNECTED;
+            }
+          }
         }
 
-        //read all the lines to the logfile
-        PrintWriter pw = new PrintWriter(job.files.log);
-        String line;
-        while (null != (line = jobIn.readLine())) {
-          pw.println(line);
+        if (resultType.equals(Job.PARSE_ERROR)) {
+          System.out.println("There was an Error in parsing the job via JSON");
+          return Result.FAILED;
+
+        } else if (resultType.equals("FAILED")) {
+          if (!job.files.log.exists()) {
+            job.files.log.createNewFile();
+          }
+
+          //read all the lines to the logfile
+          PrintWriter pw = new PrintWriter(job.files.log);
+          String line;
+          while (null != (line = jobIn.readLine())) {
+            pw.println(line);
+          }
+          pw.close();
+          return Result.FAILED;
+
+        } else if (resultType.equals("FINISHED")) {
+          if (!job.files.out.exists()) {
+            job.files.out.createNewFile();
+          }
+
+          //read all the lines to the output file
+          PrintWriter pw = new PrintWriter(job.files.out);
+          String line;
+          while (null != (line = jobIn.readLine())) {
+            pw.println(line);
+          }
+          pw.close();
+          return Result.FINISHED;
         }
-        pw.close();
+      } finally {
         jobSocket.close();
-        return Result.FAILED;
-
-      } else if (resultType.equals("FINISHED")) {
-        if (!job.files.out.exists()) {
-          job.files.out.createNewFile();
-        }
-
-        //read all the lines to the output file
-        PrintWriter pw = new PrintWriter(job.files.out);
-        String line;
-        while (null != (line = jobIn.readLine())) {
-          pw.println(line);
-        }
-        pw.close();
-        //jobSocket.close();
-        return Result.FINISHED;
       }
     } catch (IOException e) {
-      System.out.println("IO exception");
-      e.printStackTrace();
+      System.out.printf("IO exception running Job remotely: %s\n", e.getMessage());
       return Result.DISCONNECTED;
     }
 

@@ -3,7 +3,7 @@ package com.github.nedp.comp90015.proj2.job.worker.master
 import com.github.nedp.comp90015.proj2.job.Job
 import spock.lang.Specification
 
-import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.DISCONNECTED
+import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.DOWN
 import static com.github.nedp.comp90015.proj2.job.worker.master.Worker.Status.RUNNING
 
 
@@ -123,20 +123,20 @@ class WorkerPoolTest extends Specification {
 
     where:
     statuses << [
-        [DISCONNECTED, DISCONNECTED, DISCONNECTED, RUNNING],
-        [DISCONNECTED, DISCONNECTED, RUNNING, DISCONNECTED],
-        [DISCONNECTED, DISCONNECTED, RUNNING, RUNNING],
-        [DISCONNECTED, RUNNING, DISCONNECTED, DISCONNECTED],
-        [DISCONNECTED, RUNNING, DISCONNECTED, RUNNING],
-        [DISCONNECTED, RUNNING, RUNNING, DISCONNECTED],
-        [DISCONNECTED, RUNNING, RUNNING, RUNNING],
-        [RUNNING, DISCONNECTED, DISCONNECTED, DISCONNECTED],
-        [RUNNING, DISCONNECTED, DISCONNECTED, RUNNING],
-        [RUNNING, DISCONNECTED, RUNNING, DISCONNECTED],
-        [RUNNING, DISCONNECTED, RUNNING, RUNNING],
-        [RUNNING, RUNNING, DISCONNECTED, DISCONNECTED],
-        [RUNNING, RUNNING, DISCONNECTED, RUNNING],
-        [RUNNING, RUNNING, RUNNING, DISCONNECTED],
+        [DOWN, DOWN, DOWN, RUNNING],
+        [DOWN, DOWN, RUNNING, DOWN],
+        [DOWN, DOWN, RUNNING, RUNNING],
+        [DOWN, RUNNING, DOWN, DOWN],
+        [DOWN, RUNNING, DOWN, RUNNING],
+        [DOWN, RUNNING, RUNNING, DOWN],
+        [DOWN, RUNNING, RUNNING, RUNNING],
+        [RUNNING, DOWN, DOWN, DOWN],
+        [RUNNING, DOWN, DOWN, RUNNING],
+        [RUNNING, DOWN, RUNNING, DOWN],
+        [RUNNING, DOWN, RUNNING, RUNNING],
+        [RUNNING, RUNNING, DOWN, DOWN],
+        [RUNNING, RUNNING, DOWN, RUNNING],
+        [RUNNING, RUNNING, RUNNING, DOWN],
         [RUNNING, RUNNING, RUNNING, RUNNING],
     ]
   }
@@ -146,7 +146,7 @@ class WorkerPoolTest extends Specification {
     given:
     workerCountIs 10
     and:
-    workersAre DISCONNECTED
+    workersAre DOWN
     and:
     poolsStartWith workers
 

@@ -74,6 +74,7 @@ public class JobHandlerThread implements Runnable {
       }
     } finally {
       this.close(socketIn, socketOut);
+      System.out.println("done");
     }
   }
 
